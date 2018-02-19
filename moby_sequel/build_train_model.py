@@ -11,7 +11,7 @@ TRAIN_FILE = os.path.join(os.path.curdir, 'data', 'train_data.txt')
 TEST_FILE = os.path.join(os.path.curdir, 'data', 'test_data.txt')
 
 MAX_STRING_SIZE = 4096
-WINDOW_LENGTH = 256
+WINDOW_LENGTH = 16
 
 def lazy_file(fname):
     with open(fname, 'rt') as file:
@@ -25,23 +25,15 @@ LSTM_PARAMS = {
     'graph': {
         'max_string_size': MAX_STRING_SIZE,
         'in_sizes': [[WINDOW_LENGTH, 1]],
-        'dense_params': [
-            {
-                'num_units': 256,
-                'bias': True,
-                'activation': 'relu',
-                'dropout': 0.1
-            },
-        ],
         'recurr_params': [
             {
-                'units': 256,
-                'activation': 'relu',
+                'units': 16,
+                'dropout': 0.1,
             },
             {
-                'units': 1024,
-                'activation': 'relu',
-            }
+                'units': 16,
+                'dropout': 0.1,
+            },
         ],
         'out_sizes': [1],
     },
