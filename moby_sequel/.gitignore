@@ -1,0 +1,7 @@
+*-checkpoint.ipynb
+
+gcloud_scripts/
+
+data/*.txt
+data/clean/
+data/source/
