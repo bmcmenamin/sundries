@@ -19,22 +19,27 @@ def lazy_file(fname):
 
 
 LSTM_PARAMS = {
-    'name': 'moby_model',
-    'path': './moby_model',
+    'name': 'moby_model_2',
+    'path': './moby_model_2',
     'graph': {
         'in_sizes': [[WINDOW_LENGTH, 1]],
         'recurr_params': [
             {
-                'units': 2048,
-                'dropout': 0.1,
+                'units': 1024,
+                'dropout': 0.01,
+            },
+            {
+                'units': 1024,
+                'dropout': 0.01,
             },
         ],
         'out_sizes': [1],
     },
     'train': {
-        'num_epochs': 30,
-        'epoch_length': 5000,
-        'batch_size': 32
+        'num_epochs': 3,
+        'epoch_length': 1500000,
+        'batch_size': 32,
+	'learning_rate': 0.0001
     }
 }
 
