@@ -2,6 +2,7 @@ import sys
 sys.path.append('/home/mcmenamin/model_wrangler')
 
 import os
+import random
 
 from model_wrangler.model_wrangler import ModelWrangler
 from model_wrangler.model.corral.text_lstm import TextLstmModel
@@ -14,8 +15,11 @@ WINDOW_LENGTH = 128
 
 def lazy_file(fname):
     with open(fname, 'rt') as file:
-        for line in file:
-            yield line
+        X = [line for line in file]
+
+    random.shuffle(X)
+    for line in X:
+    	yield line
 
 
 LSTM_PARAMS = {
@@ -36,8 +40,8 @@ LSTM_PARAMS = {
         'out_sizes': [1],
     },
     'train': {
-        'num_epochs': 3,
-        'epoch_length': 1500000,
+        'num_epochs': 100,
+        'epoch_length': 10000,
         'batch_size': 32,
 	'learning_rate': 0.0001
     }
