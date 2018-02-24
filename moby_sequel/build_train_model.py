@@ -11,7 +11,7 @@ from model_wrangler.dataset_managers import SequentialDatasetManager
 TRAIN_FILE = os.path.join(os.path.curdir, 'data', 'train_data.txt')
 TEST_FILE = os.path.join(os.path.curdir, 'data', 'test_data.txt')
 
-WINDOW_LENGTH = 128
+WINDOW_LENGTH = 100
 
 def lazy_file(fname):
     with open(fname, 'rt') as file:
@@ -29,21 +29,21 @@ LSTM_PARAMS = {
         'in_sizes': [[WINDOW_LENGTH, 1]],
         'recurr_params': [
             {
-                'units': 1024,
-                'dropout': 0.001,
+                'units': 128,
+		'dropout': 0.5,
             },
             {
-                'units': 1024,
-                'dropout': 0.001,
+                'units': 128,
+		'dropout': 0.5,
             },
         ],
         'out_sizes': [1],
     },
     'train': {
-        'num_epochs': 500,
-        'epoch_length': 10000,
-        'batch_size': 32,
-	'learning_rate': 0.000001
+        'num_epochs': 5000,
+        'epoch_length': 1000,
+        'batch_size': 50,
+	'learning_rate': 0.01
     }
 }
 
