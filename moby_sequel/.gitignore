@@ -2,6 +2,8 @@
 
 gcloud_scripts/
 
+moby_model*/
+
 data/*.txt
 data/clean/
 data/source/
