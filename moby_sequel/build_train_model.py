@@ -1,5 +1,7 @@
 import sys
-sys.path.append('/home/mcmenamin/model_wrangler')
+sys.path.append('/Users/mcmenamin/GitHub/model_wrangler')
+
+MODEL_DIR  = '/Users/mcmenamin/GitHub/sundries/moby_sequel/'
 
 import os
 import random
@@ -30,11 +32,11 @@ LSTM_PARAMS = {
         'recurr_params': [
             {
                 'units': 128,
-		'dropout': 0.5,
+        		'dropout': 0.5,
             },
             {
                 'units': 128,
-		'dropout': 0.5,
+                'dropout': 0.5,
             },
         ],
         'out_sizes': [1],
@@ -57,7 +59,14 @@ dm_list = [
     for f in [TRAIN_FILE, TEST_FILE]
 ]
 
-lstm_model = ModelWrangler(TextLstmModel, LSTM_PARAMS)
+
+
+param_file = os.path.join(MODEL_DIR, LSTM_PARAMS['path'], 'model_params.pickle')
+if os.path.exists(param_file):
+    lstm_model = ModelWrangler.load(param_file)
+else:
+    lstm_model = ModelWrangler(TextLstmModel, LSTM_PARAMS)
+
 lstm_model.add_data(*dm_list)
 lstm_model.add_train_params(LSTM_PARAMS['train'])
 lstm_model.train()
