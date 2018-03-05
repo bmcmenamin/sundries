@@ -1,19 +1,28 @@
 import sys
 sys.path.append('/Users/mcmenamin/GitHub/model_wrangler')
 
-MODEL_DIR  = '/Users/mcmenamin/GitHub/sundries/moby_sequel/'
-
 import os
 import random
+from itertools import cycle
 
 from model_wrangler.model_wrangler import ModelWrangler
 from model_wrangler.model.corral.text_lstm import TextLstmModel
 from model_wrangler.dataset_managers import SequentialDatasetManager
 
-TRAIN_FILE = os.path.join(os.path.curdir, 'data', 'train_data.txt')
-TEST_FILE = os.path.join(os.path.curdir, 'data', 'test_data.txt')
+ROOT_DIR = '/Users/mcmenamin/GitHub/sundries/moby_sequel/'
+MODEL_DIR  = os.path.join(ROOT_DIR, 'mw')
 
-WINDOW_LENGTH = 100
+TRAIN_FILE = os.path.join(ROOT_DIR, 'data', 'train_data.txt')
+TEST_FILE = os.path.join(ROOT_DIR, 'data', 'test_data.txt')
+
+WINDOW_LENGTH = 128
+
+def dummy_lazy_file(fname):
+    for i in cycle([
+        ' abcdefghijklmnopqrstuvwxyz ',
+        ' ABCDEFGHIJKLMNOPQRSTUVWXYZ ',
+        ' 0123456789 ']):
+        yield i
 
 def lazy_file(fname):
     with open(fname, 'rt') as file:
@@ -24,30 +33,33 @@ def lazy_file(fname):
     	yield line
 
 
+
 LSTM_PARAMS = {
     'name': 'moby_model',
     'path': './moby_model',
     'graph': {
-        'in_sizes': [[WINDOW_LENGTH, 1]],
+        'win_length': WINDOW_LENGTH,
+        'embed_size': 64,
         'recurr_params': [
             {
-                'units': 128,
-        		'dropout': 0.5,
+                'units': 32,
+                'dropout': 0.1,
             },
             {
-                'units': 128,
-                'dropout': 0.5,
+                'units': 64,
+                'dropout': 0.2,
             },
         ],
-        'out_sizes': [1],
     },
     'train': {
-        'num_epochs': 5000,
+        'num_epochs': 500000,
         'epoch_length': 1000,
-        'batch_size': 50,
-	'learning_rate': 0.01
+        'batch_size': 5,
+        'learning_rate': 0.01
     }
 }
+
+
 
 dm_list = [
     SequentialDatasetManager(
