@@ -1,5 +1,5 @@
 import sys
-sys.path.append('/Users/mcmenamin/GitHub/model_wrangler')
+sys.path.append('/home/mcmenamin/model_wrangler')
 
 import os
 import random
@@ -9,13 +9,13 @@ from model_wrangler.model_wrangler import ModelWrangler
 from model_wrangler.model.corral.text_lstm import TextLstmModel
 from model_wrangler.dataset_managers import SequentialDatasetManager
 
-ROOT_DIR = '/Users/mcmenamin/GitHub/sundries/moby_sequel/'
+ROOT_DIR = '/home/mcmenamin/sundries/moby_sequel/'
 MODEL_DIR  = os.path.join(ROOT_DIR, 'mw')
 
 TRAIN_FILE = os.path.join(ROOT_DIR, 'data', 'train_data.txt')
 TEST_FILE = os.path.join(ROOT_DIR, 'data', 'test_data.txt')
 
-WINDOW_LENGTH = 128
+WINDOW_LENGTH = 140
 
 def dummy_lazy_file(fname):
     for i in cycle([
@@ -35,27 +35,28 @@ def lazy_file(fname):
 
 
 LSTM_PARAMS = {
-    'name': 'moby_model',
-    'path': './moby_model',
+    'name': 'moby_model_stride10',
+    'path': './moby_model_stride10',
     'graph': {
         'win_length': WINDOW_LENGTH,
-        'embed_size': 64,
+        'embed_size': 100,
         'recurr_params': [
             {
-                'units': 32,
-                'dropout': 0.1,
+                'units': 512,
+                'dropout': 0.5,
             },
             {
-                'units': 64,
-                'dropout': 0.2,
+                'units': 512,
+                'dropout': 0.5,
             },
         ],
     },
     'train': {
         'num_epochs': 500000,
         'epoch_length': 1000,
-        'batch_size': 5,
-        'learning_rate': 0.01
+        'batch_size': 10,
+        'learning_rate': 0.01,
+        'stride': 10
     }
 }
 
