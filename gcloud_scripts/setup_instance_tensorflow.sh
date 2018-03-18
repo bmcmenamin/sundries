@@ -34,7 +34,7 @@ CUDA_DEB_FILE=cuda-repo-ubuntu1604-9-0-local_9.0.176-1_amd64-deb
 CUDNN_TGZ_FILE=cudnn-9.0-linux-x64-v7.1.tgz
 
 # Build TF from source? If false, it'll pull an old version from GCloud
-BUILD_NEW_TF=true
+BUILD_NEW_TF=false
 
 # Install some base packages
 sudo apt-get install htop git dirmngr aptitude -y
@@ -214,6 +214,8 @@ if [[ "$INSTALL_NVIDIA_UTILS" = true && "$BUILD_NEW_TF" = false ]]; then
 else
     WHL_TO_INSTALL=`ls -1t $WORK_DIR/tensorflow/bazel_output/tensorflow-$TF_VERSION*.whl | head -n1`
 fi
+
+sudo apt-get install python3-dev python3-setuptools python3-pip python3-wheel python3-numpy -y
 
 sudo -H pip3 install -U pip numpy scipy
 sudo -H pip3 install $WHL_TO_INSTALL
