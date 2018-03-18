@@ -75,7 +75,6 @@ class TrainingPhotoManager(BaseDatasetManager):
         good_pics = [os.path.exists(os.path.join(self.data_dir, f)) for f in df_images.file_name]
         df_images = df_images[good_pics]
 
-
         df_images.id = df_images.id.astype(str)
         df_mapping.image_id = df_mapping.image_id.astype(str)
         df_mapping.category_id = df_mapping.category_id.astype(str)
@@ -101,7 +100,7 @@ class TrainingPhotoManager(BaseDatasetManager):
         df_epoch[self.output_column] = df_epoch[self.output_column].astype(int)
         return df_epoch
 
-    def get_next_batch(self, batch_size=32, eternal=False):
+    def get_next_batch(self, batch_size=32, eternal=False, **kwargs):
         """
         This generator should yield batches of training data
 

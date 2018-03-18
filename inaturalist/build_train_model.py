@@ -24,28 +24,9 @@ MODEL_PARAMS = {
 
     'graph': {
         'in_sizes': [[500, 500, 1]],
-        'conv_params': [
-            {
-                'num_units': 128,
-                'kernel': [5, 5],
-                'strides': [2, 2],
-                'pool_size': [2, 2],
-                'bias': True,
-                'activation': 'relu',
-                'activity_reg': {'l1': 0.1},
-                'dropout_rate': 0.1,
-            },
-            {
-                'num_units': 64,
-                'kernel': [5, 5],
-                'strides': [2, 2],
-                'pool_size': [2, 2],
-                'bias': True,
-                'activation': 'relu',
-                'activity_reg': {'l1': 0.1},
-                'dropout_rate': 0.1,
-            },
-        ],
+        'inception_params': {
+            'sizes': [64, 64]
+        },
         'embed_params': {
             'num_units': 30,
             'bias': True,
@@ -60,6 +41,9 @@ MODEL_PARAMS = {
         'epoch_length': 1000,
         'batch_size': 32,
         'learning_rate': 0.01,
+    },
+    'tensorboard': {
+        'scalars': ['embed_loss', 'output_loss']
     }
 }
 

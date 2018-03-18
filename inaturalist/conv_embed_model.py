@@ -13,34 +13,62 @@ class ConvEmbedModel(BaseArchitecture):
 
     # pylint: disable=too-many-instance-attributes
 
-    def _conv_layer(self, in_layers, layer_param):
-        layer_stack = [in_layers]
+    def _inception_layer(self, in_layers, total_output_units):
 
-        layer_stack.append(
-            append_conv(self, layer_stack[-1], layer_param, 'conv')
-            )
+        dropout = 0.5
+        size_1x1_output = 16
+        conv_1x1_default = {
+            'num_units': size_1x1_output,
+            'kernel': [1, 1],
+            'strides': [1, 1],
+            'pool_size': [1, 1],
+            'bias': True,
+            'activation': 'relu',
+            'activity_reg': {'l1': 0.1},
+        }
 
-        layer_stack.append(
-            append_maxpooling(self, layer_stack[-1], layer_param, 'maxpool')
-            )
+        assert total_output_units > 2*size_1x1_output
 
-        layer_stack.append(
-            append_batchnorm(self, layer_stack[-1], layer_param, 'batchnorm')
-            )
+        conv_3x3_default = conv_1x1_default.copy()
+        conv_3x3_default['kernel'] = [3, 3]
+        conv_3x3_default['num_units'] = (total_output_units - 2*size_1x1_output) // 2
 
-        layer_stack.append(
-            append_dropout(self, layer_stack[-1], layer_param, 'dropout')
-            )
+        conv_5x5_default = conv_1x1_default.copy()
+        conv_5x5_default['kernel'] = [5, 5]
+        conv_5x5_default['num_units'] = (total_output_units - 2*size_1x1_output) // 2
 
-        return layer_stack[-1]
+        pool_3x3_params = {'pool_size': [3, 3], 'padding': 'same'}
 
-    def build_embedder(self, in_layer, conv_params):
+        with tf.variable_scope('1x1/'):
+            filt_1x1_out = append_conv(self, in_layers, conv_1x1_default, 'output')
+
+        with tf.variable_scope('3x3/'):
+            filt_3x3_pre = append_conv(self, in_layers, conv_1x1_default, 'pre_conv')
+            filt_3x3_out = append_conv(self, filt_3x3_pre, conv_3x3_default, 'output')
+
+        with tf.variable_scope('5x5/'):
+            filt_5x5_pre = append_conv(self, in_layers, conv_1x1_default, 'pre_conv')
+            filt_5x5_out = append_conv(self, filt_5x5_pre, conv_5x5_default, 'output')
+
+        with tf.variable_scope('pool/'):
+            filt_pool_pre = append_maxpooling(self, in_layers, pool_3x3_params, 'pre_conv')
+            filt_pool_out = append_conv(self, filt_pool_pre, conv_1x1_default, 'output')
+
+        with tf.variable_scope('ouput/'):
+            concat_filts = tf.concat([filt_1x1_out, filt_3x3_out, filt_5x5_out, filt_pool_out], axis=-1)
+            concat_bn = append_batchnorm(self, concat_filts, {}, 'batchnorm')
+            concat_do = append_dropout(self, concat_bn, {'dropout': dropout}, 'dropout')
+
+        return concat_do
+
+
+    def build_embedder(self, in_layer, inception_sizes):
         """Build a stack of layers for mapping an input to an embedding"""
 
         layer_stack = [in_layer]
-        for idx, layer_param in enumerate(conv_params):
-            with tf.variable_scope('conv_layer_{}/'.format(idx)):
-                layer_stack.append(self._conv_layer(layer_stack[-1], layer_param))
+        for idx, num_filt in enumerate(inception_sizes):
+            with tf.variable_scope('inception_{}/'.format(idx)):
+                layer_stack.append(self._inception_layer(layer_stack[-1], num_filt))
 
         # Force unit-norm
         flat = tf.contrib.layers.flatten(layer_stack[-1])
@@ -65,7 +93,7 @@ class ConvEmbedModel(BaseArchitecture):
         #
 
         in_sizes = params.get('in_sizes', [])
-        conv_params = params.get('conv_params', [])
+        inception_params = params.get('inception_params', [])
         embed_params = params.get('embed_params', {})
         embed_dim = embed_params['num_units']
 
@@ -94,7 +122,7 @@ class ConvEmbedModel(BaseArchitecture):
             name='image_batch'
         ), tf.float32)
 
-        conv_stack = self.build_embedder(image_batch, conv_params)
+        conv_stack = self.build_embedder(image_batch, inception_params['sizes'])
         embeds = append_dense(self, conv_stack, embed_params, 'embed')
 
         decode_weights = tf.Variable(
@@ -140,9 +168,14 @@ class ConvEmbedModel(BaseArchitecture):
             )
 
 
-        loss = embed_loss + 10*output_loss
+        loss = embed_loss + output_loss
 
-        return in_layers, out_layers, target_layers, embeds, loss
+        tb_scalars = {
+            'embed_loss': embed_loss,
+            'output_loss': output_loss,
+        }
+
+        return in_layers, out_layers, target_layers, embeds, loss, tb_scalars
 
 
     def setup_training_step(self, params):
