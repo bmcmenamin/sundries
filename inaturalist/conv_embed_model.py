@@ -13,10 +13,27 @@ class ConvEmbedModel(BaseArchitecture):
 
     # pylint: disable=too-many-instance-attributes
 
-    def _inception_layer(self, in_layers, total_output_units):
+    def _conv_layer(self, in_layers, layer_param):
+        layer_stack = [in_layers]
 
-        dropout = 0.5
-        size_1x1_output = 16
+        layer_stack.append(
+            append_conv(self, layer_stack[-1], layer_param, 'conv')
+            )
+
+        layer_stack.append(
+            append_maxpooling(self, layer_stack[-1], layer_param, 'maxpool')
+            )
+
+        return layer_stack[-1]
+
+    def _inception_layer(self, in_layers, params):
+
+        size_1x1_output = params.get('size_1x1_output', 64)
+        downsample = params.get('downsample', None)
+        total_output_units = params.get('total_output_units', 2*size_1x1_output)
+
+        assert total_output_units > 2*size_1x1_output
+
         conv_1x1_default = {
             'num_units': size_1x1_output,
             'kernel': [1, 1],
@@ -27,15 +44,13 @@ class ConvEmbedModel(BaseArchitecture):
             'activity_reg': {'l1': 0.1},
         }
 
-        assert total_output_units > 2*size_1x1_output
-
         conv_3x3_default = conv_1x1_default.copy()
         conv_3x3_default['kernel'] = [3, 3]
-        conv_3x3_default['num_units'] = (total_output_units - 2*size_1x1_output) // 2
+        conv_3x3_default['num_units'] = (total_output_units - 2*size_1x1_output - conv_5x5_default['num_units'])
 
         conv_5x5_default = conv_1x1_default.copy()
         conv_5x5_default['kernel'] = [5, 5]
-        conv_5x5_default['num_units'] = (total_output_units - 2*size_1x1_output) // 2
+        conv_5x5_default['num_units'] = (total_output_units - 2*size_1x1_output) // 4
 
         pool_3x3_params = {'pool_size': [3, 3], 'padding': 'same'}
 
@@ -55,29 +70,41 @@ class ConvEmbedModel(BaseArchitecture):
             filt_pool_out = append_conv(self, filt_pool_pre, conv_1x1_default, 'output')
 
         with tf.variable_scope('ouput'):
-            concat_filts = tf.concat([filt_1x1_out, filt_3x3_out, filt_5x5_out, filt_pool_out], axis=-1)
-            concat_bn = append_batchnorm(self, concat_filts, {}, 'batchnorm')
-            concat_do = append_dropout(self, concat_bn, {'dropout': dropout}, 'dropout')
+            output_stack = [
+                tf.concat([filt_1x1_out, filt_3x3_out, filt_5x5_out, filt_pool_out], axis=-1)
+            ]
 
-        return concat_do
+            if downsample:
+                output_stack.append(
+                    append_maxpooling(
+                        self, output_stack[-1],
+                        {'pool_size': downsample, 'padding': 'same'},
+                        'downsample')
+                )
+
+            concat_bn = append_batchnorm(self, output_stack[-1], {}, 'batchnorm')
+
+        return concat_bn
 
 
-    def build_embedder(self, in_layer, inception_sizes):
+    def build_embedder(self, in_layer, inception_params):
         """Build a stack of layers for mapping an input to an embedding"""
 
         layer_stack = [in_layer]
-        for idx, num_filt in enumerate(inception_sizes):
+        for idx, inception_param in enumerate(inception_params):
             with tf.variable_scope('inception_{}'.format(idx)):
-                layer_stack.append(self._inception_layer(layer_stack[-1], num_filt))
+                layer_stack.append(self._inception_layer(layer_stack[-1], inception_param))
 
-        collapse_space = tf.reduce_max(layer_stack[-1], axis=[1, 2], keepdims=True)
+        collapse_space = tf.contrib.layers.flatten(
+            tf.reduce_mean(layer_stack[-1], axis=[1, 2], keepdims=False)
+        )
+        concat_dropout = append_dropout(self, collapse_space, {'dropout': 0.4}, 'dropout')
 
         # Force unit-norm
-        flat = tf.contrib.layers.flatten(collapse_space)
-        norm = tf.norm(flat, ord='euclidean', axis=1, keepdims=True, name='norm')
-        layer_stack.append(tf.divide(flat, norm, name='embed_norm'))
-
-        return layer_stack[-1]
+        #flat = tf.contrib.layers.flatten(collapse_space)
+        #norm = tf.norm(flat, ord='euclidean', axis=1, keepdims=True, name='norm')
+        
+        return concat_dropout
 
     def _preprocess_images(self, params, filename):
         image_string = tf.read_file(filename)
@@ -95,6 +122,7 @@ class ConvEmbedModel(BaseArchitecture):
         #
 
         in_sizes = params.get('in_sizes', [])
+        preinception_params = params.get('preinception_params', [])
         inception_params = params.get('inception_params', [])
         embed_params = params.get('embed_params', {})
         embed_dim = embed_params['num_units']
@@ -124,7 +152,17 @@ class ConvEmbedModel(BaseArchitecture):
             name='image_batch'
         ), tf.float32)
 
-        conv_stack = self.build_embedder(image_batch, inception_params['sizes'])
+        # Downsample input before inceptions
+        pre_incept_stack = [image_batch]
+        with tf.variable_scope('preincept_conv/'):
+            for idx, param in enumerate(preinception_params):
+                pre_incept_stack.append(
+                    self._conv_layer(pre_incept_stack[-1], param)
+                )
+
+        # Do the inceptions input before inceptions
+        conv_stack = self.build_embedder(pre_incept_stack[-1], inception_params['sizes'])
+
         embeds = append_dense(self, conv_stack, embed_params, 'embed')
 
         decode_weights = tf.Variable(

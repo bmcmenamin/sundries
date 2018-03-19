@@ -23,12 +23,71 @@ MODEL_PARAMS = {
     'path': './model_318',
 
     'graph': {
-        'in_sizes': [[400, 400, 1]],
-        'inception_params': {
-            'sizes': [100, 100, 100]
-        },
+        'in_sizes': [[500, 500, 1]],
+        'preinception_params': [
+            {
+                'num_units': 64,
+                'kernel': [7, 7],
+                'strides': [2, 2],
+                'pool_size': [2, 2],
+                'bias': True,
+                'activation': 'relu',
+                'activity_reg': {'l1': 0.1},
+            },
+            {
+                'num_units': 175,
+                'kernel': [3, 3],
+                'strides': [1, 1],
+                'pool_size': [2, 2],
+                'bias': True,
+                'activation': 'relu',
+                'activity_reg': {'l1': 0.1},
+            },
+        ],
+        'inception_params': [
+            {
+                'size_1x1_output': 16,
+                'downsample': None,
+                'total_output_units': 250,
+            },
+            {
+                'size_1x1_output': 16,
+                'downsample': 2,
+                'total_output_units': 500,
+            },
+            {
+                'size_1x1_output': 16,
+                'downsample': None,
+                'total_output_units': 500,
+            },
+            {
+                'size_1x1_output': 16,
+                'downsample': None,
+                'total_output_units': 500,
+            },
+            {
+                'size_1x1_output': 16,
+                'downsample': None,
+                'total_output_units': 500,
+            },
+            {
+                'size_1x1_output': 16,
+                'downsample': 2,
+                'total_output_units': 800,
+            },
+            {
+                'size_1x1_output': 16,
+                'downsample': None,
+                'total_output_units': 800,
+            },
+            {
+                'size_1x1_output': 16,
+                'downsample': None,
+                'total_output_units': 800,
+            },
+        ],
         'embed_params': {
-            'num_units': 120,
+            'num_units': 300,
             'bias': True,
             'activation': 'tanh',
             'dropout_rate': 0.0,
