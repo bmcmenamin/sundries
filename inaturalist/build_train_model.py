@@ -23,10 +23,10 @@ MODEL_PARAMS = {
     'path': './model_318',
 
     'graph': {
-        'in_sizes': [[500, 500, 1]],
+        'in_sizes': [[400, 400, 1]],
         'preinception_params': [
             {
-                'num_units': 64,
+                'num_units': 60,
                 'kernel': [7, 7],
                 'strides': [2, 2],
                 'pool_size': [2, 2],
@@ -35,7 +35,7 @@ MODEL_PARAMS = {
                 'activity_reg': {'l1': 0.1},
             },
             {
-                'num_units': 175,
+                'num_units': 120,
                 'kernel': [3, 3],
                 'strides': [1, 1],
                 'pool_size': [2, 2],
@@ -47,43 +47,18 @@ MODEL_PARAMS = {
         'inception_params': [
             {
                 'size_1x1_output': 16,
-                'downsample': None,
-                'total_output_units': 250,
+                'downsample': 2,
+                'total_output_units': 200,
             },
             {
                 'size_1x1_output': 16,
                 'downsample': 2,
-                'total_output_units': 500,
+                'total_output_units': 300,
             },
             {
                 'size_1x1_output': 16,
-                'downsample': None,
-                'total_output_units': 500,
-            },
-            {
-                'size_1x1_output': 16,
-                'downsample': None,
-                'total_output_units': 500,
-            },
-            {
-                'size_1x1_output': 16,
-                'downsample': None,
-                'total_output_units': 500,
-            },
-            {
-                'size_1x1_output': 16,
-                'downsample': 2,
-                'total_output_units': 800,
-            },
-            {
-                'size_1x1_output': 16,
-                'downsample': None,
-                'total_output_units': 800,
-            },
-            {
-                'size_1x1_output': 16,
-                'downsample': None,
-                'total_output_units': 800,
+                'downsample': 4,
+                'total_output_units': 400,
             },
         ],
         'embed_params': {
