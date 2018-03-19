@@ -39,22 +39,22 @@ class ConvEmbedModel(BaseArchitecture):
 
         pool_3x3_params = {'pool_size': [3, 3], 'padding': 'same'}
 
-        with tf.variable_scope('1x1/'):
+        with tf.variable_scope('1x1'):
             filt_1x1_out = append_conv(self, in_layers, conv_1x1_default, 'output')
 
-        with tf.variable_scope('3x3/'):
+        with tf.variable_scope('3x3'):
             filt_3x3_pre = append_conv(self, in_layers, conv_1x1_default, 'pre_conv')
             filt_3x3_out = append_conv(self, filt_3x3_pre, conv_3x3_default, 'output')
 
-        with tf.variable_scope('5x5/'):
+        with tf.variable_scope('5x5'):
             filt_5x5_pre = append_conv(self, in_layers, conv_1x1_default, 'pre_conv')
             filt_5x5_out = append_conv(self, filt_5x5_pre, conv_5x5_default, 'output')
 
-        with tf.variable_scope('pool/'):
+        with tf.variable_scope('pool'):
             filt_pool_pre = append_maxpooling(self, in_layers, pool_3x3_params, 'pre_conv')
             filt_pool_out = append_conv(self, filt_pool_pre, conv_1x1_default, 'output')
 
-        with tf.variable_scope('ouput/'):
+        with tf.variable_scope('ouput'):
             concat_filts = tf.concat([filt_1x1_out, filt_3x3_out, filt_5x5_out, filt_pool_out], axis=-1)
             concat_bn = append_batchnorm(self, concat_filts, {}, 'batchnorm')
             concat_do = append_dropout(self, concat_bn, {'dropout': dropout}, 'dropout')
@@ -67,11 +67,13 @@ class ConvEmbedModel(BaseArchitecture):
 
         layer_stack = [in_layer]
         for idx, num_filt in enumerate(inception_sizes):
-            with tf.variable_scope('inception_{}/'.format(idx)):
+            with tf.variable_scope('inception_{}'.format(idx)):
                 layer_stack.append(self._inception_layer(layer_stack[-1], num_filt))
 
+        collapse_space = tf.reduce_max(layer_stack[-1], axis=[1, 2], keepdims=True)
+
         # Force unit-norm
-        flat = tf.contrib.layers.flatten(layer_stack[-1])
+        flat = tf.contrib.layers.flatten(collapse_space)
         norm = tf.norm(flat, ord='euclidean', axis=1, keepdims=True, name='norm')
         layer_stack.append(tf.divide(flat, norm, name='embed_norm'))
 

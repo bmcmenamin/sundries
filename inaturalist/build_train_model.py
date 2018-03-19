@@ -8,8 +8,8 @@ from model_wrangler.model_wrangler import ModelWrangler
 from conv_embed_model import ConvEmbedModel
 from image_reader import TrainingPhotoManager
 
-ROOT_DIR = '/Users/mcmenamin/GitHub/sundries/inaturalist/'
-DATA_DIR = os.path.join(ROOT_DIR, 'data')
+ROOT_DIR = '/mnt/disks/image-data/'
+DATA_DIR = ROOT_DIR
 TRAIN_FILE = os.path.join(ROOT_DIR, 'train2018.json')
 VALID_FILE = os.path.join(ROOT_DIR, 'val2018.json')
 
@@ -19,16 +19,16 @@ OUTPUT_COL = 'category_id'
 
 
 MODEL_PARAMS = {
-    'name': 'test_model',
-    'path': './test_model',
+    'name': 'model_318',
+    'path': './model_318',
 
     'graph': {
-        'in_sizes': [[500, 500, 1]],
+        'in_sizes': [[400, 400, 1]],
         'inception_params': {
-            'sizes': [64, 64]
+            'sizes': [100, 100, 100]
         },
         'embed_params': {
-            'num_units': 30,
+            'num_units': 120,
             'bias': True,
             'activation': 'tanh',
             'dropout_rate': 0.0,
