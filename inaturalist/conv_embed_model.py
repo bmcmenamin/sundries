@@ -236,12 +236,16 @@ class ConvEmbedModel(BaseArchitecture):
     def setup_training_step(self, params):
         """Set up loss and training step"""
 
-        # Import params
-        learning_rate = params.get('learning_rate', 0.01)
-        optimizer = tf.train.GradientDescentOptimizer(learning_rate)
+        learning_rate = params.get('learning_rate', 0.001)
+        optimizer = tf.train.RMSPropOptimizer(learning_rate)
 
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         with tf.control_dependencies(update_ops):
-            train_step = optimizer.minimize(self.loss)
+            capped_grads = [
+                (tf.clip_by_value(g, -1.0, 1.0), v)
+                for g, v in optimizer.compute_gradients(self.loss)
+            ]
+            train_step = optimizer.apply_gradients(capped_grads)
 
         return train_step
+
