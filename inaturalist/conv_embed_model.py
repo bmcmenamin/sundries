@@ -4,7 +4,7 @@ from functools import partial
 
 import tensorflow as tf
 
-from model_wrangler.architecture import BaseArchitecture
+from model_wrangler.architecture import BaseArchitecture, LOGGER
 from model_wrangler.model.layers import (
     append_dropout, append_batchnorm, append_conv, append_maxpooling, append_dense
 )
@@ -96,20 +96,33 @@ class ConvEmbedModel(BaseArchitecture):
             tf.reduce_mean(layer_stack[-1], axis=[1, 2], keepdims=False)
         )
         concat_dropout = append_dropout(self, collapse_space, {'dropout': 0.4}, 'dropout')
-
-        # Force unit-norm
-        #flat = tf.contrib.layers.flatten(collapse_space)
-        #norm = tf.norm(flat, ord='euclidean', axis=1, keepdims=True, name='norm')
         
         return concat_dropout
 
     def _preprocess_images(self, params, filename):
-        image_string = tf.read_file(filename)
-        image_decoded = tf.image.decode_jpeg(image_string, channels=1)
-        image_resized = tf.image.resize_image_with_crop_or_pad(
-            image_decoded, params['height'], params['width']
-        )
-        return image_resized
+        try:
+            image_string = tf.read_file(filename)
+            
+            image_decoded = tf.image.decode_jpeg(
+                image_string,
+                channels=1,
+                try_recover_truncated=True,
+                acceptable_fraction=0.5
+            )
+
+            image_resized = tf.image.resize_image_with_crop_or_pad(
+                image_decoded, params['height'], params['width']
+            )
+
+            image_dtype = tf.image.convert_image_dtype(
+                image_resized, tf.float32, saturate=True
+            )
+            
+            return image_dtype
+
+        except InvalidArgumentError:
+            LOGGER.warn('input %s was corrupted or something', tf.compat.as_text(image_string))
+            return tf.zeros([params['height'], params['width'], 1])
 
     def setup_layers(self, params):
 
@@ -140,13 +153,13 @@ class ConvEmbedModel(BaseArchitecture):
             for idx, in_size in enumerate(in_sizes)
         ]
 
-        image_batch = tf.cast(tf.map_fn(
+        image_batch = tf.map_fn(
             partial(self._preprocess_images, prepro_params),
             in_layers[0],
             back_prop=False,
-            dtype=tf.uint8,
+            dtype=tf.float32,
             name='image_batch'
-        ), tf.float32)
+        )
 
         # Downsample input before inceptions
         pre_incept_stack = [image_batch]
@@ -160,7 +173,12 @@ class ConvEmbedModel(BaseArchitecture):
         # Do the inceptions input before inceptions
         conv_stack = self.build_embedder(pre_incept_stack[-1], inception_params)
 
-        embeds = append_dense(self, conv_stack, embed_params, 'embed')
+        embeds_in = append_dense(self, conv_stack, embed_params, 'embed')
+
+        # Force unit-norm
+        flat_embeds = tf.contrib.layers.flatten(embeds_in)
+        norm_embeds = tf.norm(flat_embeds, ord='euclidean', axis=1, keepdims=True, name='norm')
+        embeds = flat_embeds / norm_embeds
 
         decode_weights = tf.Variable(
             tf.random_normal([num_output_categories, embed_dim]),
