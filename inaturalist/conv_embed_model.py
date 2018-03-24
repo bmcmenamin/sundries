@@ -1,139 +1,62 @@
 """Module sets up Convolutional Siamese model"""
 
-from functools import partial
-
 import numpy as np
 
-from skimage.data import imread
-from skimage.transform import rescale
-from skimage.util import pad
+from keras.applications import InceptionV3, imagenet_utils
+from keras.preprocessing.image import img_to_array, load_img
 
 import tensorflow as tf
 
 from model_wrangler.architecture import BaseArchitecture, LOGGER
 from model_wrangler.model.layers import (
-    append_dropout, append_batchnorm, append_conv, append_maxpooling, append_dense
+    append_dropout, append_batchnorm, append_dense
 )
 
 class ConvEmbedModel(BaseArchitecture):
 
     # pylint: disable=too-many-instance-attributes
 
-    def _conv_layer(self, in_layers, layer_param):
-        layer_stack = [in_layers]
+    INCEPTION = InceptionV3(
+        include_top=False,
+        pooling='max',
+        weights='imagenet',
+    )
 
-        layer_stack.append(
-            append_conv(self, layer_stack[-1], layer_param, 'conv')
-            )
+    def build_embedder(self, in_layer, dense_params):
 
-        layer_stack.append(
-            append_maxpooling(self, layer_stack[-1], layer_param, 'maxpool')
-            )
+        layer_stack = [in_layer]
+        for idx, dense_param in enumerate(dense_params):
+            with tf.variable_scope('layer_{}'.format(idx)):
+
+                layer_stack.append(
+                    append_dense(self, layer_stack[-1], dense_param, 'dense')
+                )
+
+                layer_stack.append(
+                    append_batchnorm(self, layer_stack[-1], dense_param, 'batchnorm')
+                )
+
+                layer_stack.append(
+                    append_dropout(self, layer_stack[-1], dense_param, 'dropout')
+                )
 
         return layer_stack[-1]
 
-    def _inception_layer(self, in_layers, params):
 
-        size_1x1_output = params.get('size_1x1_output', 64)
-        downsample = params.get('downsample', 1)
-        total_output_units = params.get('total_output_units', 2*size_1x1_output)
-
-        assert total_output_units > 2*size_1x1_output
-
-        conv_1x1_default = {
-            'num_units': size_1x1_output,
-            'kernel': [1, 1],
-            'strides': [1, 1],
-            'pool_size': [1, 1],
-            'bias': True,
-            'activation': 'relu',
-            'activity_reg': {'l1': 0.1},
-        }
-
-        conv_1x1_output = conv_1x1_default.copy()
-        conv_1x1_output['stides'] = downsample
-
-        conv_5x5_default = conv_1x1_output.copy()
-        conv_5x5_default['kernel'] = [5, 5]
-        conv_5x5_default['num_units'] = (total_output_units - 2*size_1x1_output) // 4
-
-        conv_3x3_default = conv_1x1_output.copy()
-        conv_3x3_default['kernel'] = [3, 3]
-        conv_3x3_default['num_units'] = (total_output_units - 2*size_1x1_output - conv_5x5_default['num_units'])
-
-        pool_3x3_params = {'pool_size': [3, 3], 'padding': 'same'}
-
-        with tf.variable_scope('1x1'):
-            filt_1x1_out = append_conv(self, in_layers, conv_1x1_output, 'output')
-
-        with tf.variable_scope('3x3'):
-            filt_3x3_pre = append_conv(self, in_layers, conv_1x1_default, 'pre_conv')
-            filt_3x3_out = append_conv(self, filt_3x3_pre, conv_3x3_default, 'output')
-
-        with tf.variable_scope('5x5'):
-            filt_5x5_pre = append_conv(self, in_layers, conv_1x1_default, 'pre_conv')
-            filt_5x5_out = append_conv(self, filt_5x5_pre, conv_5x5_default, 'output')
-
-        with tf.variable_scope('pool'):
-            filt_pool_pre = append_maxpooling(self, in_layers, pool_3x3_params, 'pre_conv')
-            filt_pool_out = append_conv(self, filt_pool_pre, conv_1x1_output, 'output')
-
-        with tf.variable_scope('ouput'):
-            output_stack = [
-                tf.concat([filt_1x1_out, filt_3x3_out, filt_5x5_out, filt_pool_out], axis=-1)
-            ]
-
-            output_stack.append(
-                append_batchnorm(self, output_stack[-1], {}, 'batchnorm')
-            )
-
-        return output_stack[-1]
-
-
-    def build_embedder(self, in_layer, inception_params):
-        """Build a stack of layers for mapping an input to an embedding"""
-
-        layer_stack = [in_layer]
-        for idx, inception_param in enumerate(inception_params):
-            with tf.variable_scope('inception_{}'.format(idx)):
-                layer_stack.append(self._inception_layer(layer_stack[-1], inception_param))
-
-        collapse_space = tf.contrib.layers.flatten(
-            tf.reduce_mean(layer_stack[-1], axis=[1, 2], keepdims=False)
-        )
-        concat_dropout = append_dropout(self, collapse_space, {'dropout': 0.4}, 'dropout')
-        
-        return concat_dropout
-
-    def _preprocess_images(self, params, filename):
+    def _preprocess_images(self, filename, target_size=[299, 299]):
 
         try:
-
-            image_decoded = imread(filename, as_grey=True)[..., np.newaxis]
-
-            if image_decoded.shape[0] > image_decoded.shape[1]:
-                scale = 1.0*params['height'] / image_decoded.shape[0]
-            else:
-                scale = 1.0*params['width'] / image_decoded.shape[1]
-
-            image_scaled = rescale(image_decoded, scale)
-
-            vert_pad = params['height'] - image_scaled.shape[0]
-            horz_pad = params['width'] - image_scaled.shape[1]
-
-            pads = [
-                (vert_pad // 2, vert_pad - (vert_pad // 2)),
-                (horz_pad // 2, horz_pad - (horz_pad // 2)),
-                (0, 0)
-            ]
-            image_padded = pad(image_scaled, pads, mode='reflect')
-
-            image_dtype = (1.0 * image_padded) / image_padded.ravel().max()
-            return image_dtype
-
+            image = load_img(filename, target_size=target_size)
+            image = img_to_array(image)
+            image = np.expand_dims(image, axis=0)
+            image = imagenet_utils.preprocess_input(image)
         except:
-            LOGGER.warn('input %s was corrupted or something', filename)
-            return np.zeros([params['height'], params['width'], 1])
+            LOGGER.warn('input %s was, like, corrupted or something?', filename)
+            image = np.zeros(target_size + [3])
+
+        incept_pred = self.INCEPTION.predict(image) # BWAAAAAAAMP
+        return incept_pred
+
 
     def setup_layers(self, params):
 
@@ -141,19 +64,11 @@ class ConvEmbedModel(BaseArchitecture):
         # Load params
         #
 
-        in_sizes = params.get('in_sizes', [])
-        preinception_params = params.get('preinception_params', [])
-        inception_params = params.get('inception_params', [])
         embed_params = params.get('embed_params', {})
-        embed_dim = embed_params['num_units']
+        embed_dim = embed_params[-1]['num_units']
 
         num_output_categories = params.get('num_output_categories', 1)
         num_targets = params.get('num_targets', 1)
-
-        prepro_params = {'height': in_sizes[0][0], 'width': in_sizes[0][1]}
-
-        if len(in_sizes) != 1:
-            raise AttributeError('Embedding net takes one input only!') 
 
         #
         # Build model
@@ -161,56 +76,47 @@ class ConvEmbedModel(BaseArchitecture):
 
         in_layers = [
             tf.placeholder("string", name="input_{}".format(idx), shape=[None])
-            for idx, in_size in enumerate(in_sizes)
         ]
 
-        image_batch = tf.py_func(
-            partial(self._preprocess_images, prepro_params),
-            in_layers,
-            tf.float32,
-            name='image_batch'
-        )
+        with tf.device('/cpu:0'):
+            with tf.variable_scope('preprocess'):
+                image_batch = tf.py_func(
+                    self._preprocess_images,
+                    in_layers,
+                    tf.float32,
+                    name='image_batch'
+                )
 
-        # Downsample input before inceptions
-        pre_incept_stack = [image_batch]
-        with tf.variable_scope('preinception'):
-            for idx, param in enumerate(preinception_params):
-                with tf. variable_scope('conv_{}'.format(idx)):
-                    pre_incept_stack.append(
-                        self._conv_layer(pre_incept_stack[-1], param)
-                    )
+        # Rejigger the embeddding layer from inceptionV3
+        with tf.device('/gpu:0'):
 
-        # Do the inceptions input before inceptions
-        conv_stack = self.build_embedder(pre_incept_stack[-1], inception_params)
+            with tf.variable_scope('rejiggerer'):
+                embeds = self.build_embedder(image_batch, embed_params)
 
-        embeds_in = append_dense(self, conv_stack, embed_params, 'embed')
+            with tf.variable_scope('decoder'):
 
-        # Force unit-norm
-        flat_embeds = tf.contrib.layers.flatten(embeds_in)
-        norm_embeds = tf.norm(flat_embeds, ord='euclidean', axis=1, keepdims=True, name='norm')
-        embeds = flat_embeds / norm_embeds
+                decode_weights = tf.Variable(
+                    tf.random_normal([num_output_categories, embed_dim]),
+                    name='weights'
+                )
 
-        decode_weights = tf.Variable(
-            tf.random_normal([num_output_categories, embed_dim]),
-            name='decode_weights'
-        )
-        decode_bias = tf.Variable(
-            tf.random_normal([num_output_categories]),
-            name='decode_weights'
-        )
+                decode_bias = tf.Variable(
+                    tf.random_normal([num_output_categories]),
+                    name='bias'
+                )
 
-        out_layers = [
-            tf.matmul(embeds, decode_weights, transpose_b=True) + decode_bias        
-        ]
+                out_layers = [
+                    tf.matmul(embeds, decode_weights, transpose_b=True) + decode_bias        
+                ]
 
-        target_layers = [
-            tf.placeholder("float", name="target_{}".format(idx), shape=[None, 1])
-            for idx in range(num_targets)
-        ]
+                target_layers = [
+                    tf.placeholder("float", name="target_{}".format(idx), shape=[None, 1])
+                    for idx in range(num_targets)
+                ]
 
         # Sum the losses for all the levels of categoirzation
 
-        with tf.variable_scope('embed_loss/'):
+        with tf.variable_scope('losses'):
             embed_loss = tf.reduce_sum([
                 tf.contrib.losses.metric_learning.triplet_semihard_loss(
                     tf.reshape(targ, [-1]), embeds
@@ -218,7 +124,6 @@ class ConvEmbedModel(BaseArchitecture):
                 for targ in target_layers
             ])
 
-        with tf.variable_scope('output_loss/'):
 
             output_loss = tf.reduce_sum(
                 tf.contrib.nn.sampled_sparse_softmax_loss(
@@ -232,7 +137,7 @@ class ConvEmbedModel(BaseArchitecture):
                 )
             )
 
-        loss = embed_loss + output_loss
+            loss = embed_loss + output_loss
 
         tb_scalars = {
             'embed_loss': embed_loss,

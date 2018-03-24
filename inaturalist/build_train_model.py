@@ -19,62 +19,40 @@ OUTPUT_COL = 'category_id'
 
 
 MODEL_PARAMS = {
-    'name': 'model_318',
-    'path': './model_318',
+    'name': 'model_324',
+    'path': './model_324',
 
     'graph': {
-        'in_sizes': [[600, 600, 1]],
-        'preinception_params': [
+
+        'embed_params': [
             {
-                'num_units': 60,
-                'kernel': [7, 7],
-                'strides': [3, 3],
-                'pool_size': [3, 3],
+                'num_units': 2000,
                 'bias': True,
-                'activation': 'relu',
-                'activity_reg': {'l1': 0.1},
+                'activation': 'tanh',
+                'dropout_rate': 0.2,
             },
             {
-                'num_units': 120,
-                'kernel': [3, 3],
-                'strides': [1, 1],
-                'pool_size': [3, 3],
+                'num_units': 1000,
                 'bias': True,
-                'activation': 'relu',
-                'activity_reg': {'l1': 0.1},
+                'activation': 'tanh',
+                'dropout_rate': 0.2,
             },
+            {
+                'num_units': 300,
+                'bias': True,
+                'activation': 'tanh',
+                'dropout_rate': 0.2,
+            },
+
         ],
-        'inception_params': [
-            {
-                'size_1x1_output': 8,
-                'downsample': 2,
-                'total_output_units': 200,
-            },
-            {
-                'size_1x1_output': 8,
-                'downsample': 2,
-                'total_output_units': 300,
-            },
-            {
-                'size_1x1_output': 8,
-                'downsample': 4,
-                'total_output_units': 400,
-            },
-        ],
-        'embed_params': {
-            'num_units': 300,
-            'bias': True,
-            'activation': 'tanh',
-            'dropout_rate': 0.01,
-        },
         'num_output_categories': 8142,
         'num_targets': 1 + len(EMBED_COLS)
     },
     'train': {
         'num_epochs': 5000,
         'epoch_length': 1000,
-        'batch_size': 24,
-        'learning_rate': 0.01,
+        'batch_size': 128,
+        'learning_rate': 0.1,
     },
     'tensorboard': {
         'scalars': ['embed_loss', 'output_loss']

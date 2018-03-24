@@ -54,3 +54,5 @@ mkdir test2018_bad
 mv /mnt/disks/image-data/test2018/ba8376a212476203313bbfadfbe39d62.jpg test2018_bad/
 mv /mnt/disks/image-data/test2018/ba448fcfdf84e5e89d77402ecc5fa3ce.jpg test2018_bad/
 
+
+tar -xzvf test2018.tar.gz test2018/ba8376a212476203313bbfadfbe39d62.jpg
