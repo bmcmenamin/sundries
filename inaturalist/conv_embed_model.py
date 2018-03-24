@@ -2,6 +2,12 @@
 
 from functools import partial
 
+import numpy as np
+
+from skimage.data import imread
+from skimage.transform import rescale
+from skimage.util import pad
+
 import tensorflow as tf
 
 from model_wrangler.architecture import BaseArchitecture, LOGGER
@@ -100,29 +106,34 @@ class ConvEmbedModel(BaseArchitecture):
         return concat_dropout
 
     def _preprocess_images(self, params, filename):
+
         try:
-            image_string = tf.read_file(filename)
-            
-            image_decoded = tf.image.decode_jpeg(
-                image_string,
-                channels=1,
-                try_recover_truncated=True,
-                acceptable_fraction=0.5
-            )
 
-            image_resized = tf.image.resize_image_with_crop_or_pad(
-                image_decoded, params['height'], params['width']
-            )
+            image_decoded = imread(filename, as_grey=True)[..., np.newaxis]
 
-            image_dtype = tf.image.convert_image_dtype(
-                image_resized, tf.float32, saturate=True
-            )
-            
+            if image_decoded.shape[0] > image_decoded.shape[1]:
+                scale = 1.0*params['height'] / image_decoded.shape[0]
+            else:
+                scale = 1.0*params['width'] / image_decoded.shape[1]
+
+            image_scaled = rescale(image_decoded, scale)
+
+            vert_pad = params['height'] - image_scaled.shape[0]
+            horz_pad = params['width'] - image_scaled.shape[1]
+
+            pads = [
+                (vert_pad // 2, vert_pad - (vert_pad // 2)),
+                (horz_pad // 2, horz_pad - (horz_pad // 2)),
+                (0, 0)
+            ]
+            image_padded = pad(image_scaled, pads, mode='reflect')
+
+            image_dtype = (1.0 * image_padded) / image_padded.ravel().max()
             return image_dtype
 
-        except InvalidArgumentError:
-            LOGGER.warn('input %s was corrupted or something', tf.compat.as_text(image_string))
-            return tf.zeros([params['height'], params['width'], 1])
+        except:
+            LOGGER.warn('input %s was corrupted or something', filename)
+            return np.zeros([params['height'], params['width'], 1])
 
     def setup_layers(self, params):
 
@@ -153,11 +164,10 @@ class ConvEmbedModel(BaseArchitecture):
             for idx, in_size in enumerate(in_sizes)
         ]
 
-        image_batch = tf.map_fn(
+        image_batch = tf.py_func(
             partial(self._preprocess_images, prepro_params),
-            in_layers[0],
-            back_prop=False,
-            dtype=tf.float32,
+            in_layers,
+            tf.float32,
             name='image_batch'
         )
 
@@ -222,7 +232,6 @@ class ConvEmbedModel(BaseArchitecture):
                 )
             )
 
-
         loss = embed_loss + output_loss
 
         tb_scalars = {
@@ -240,12 +249,13 @@ class ConvEmbedModel(BaseArchitecture):
         optimizer = tf.train.RMSPropOptimizer(learning_rate)
 
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-        with tf.control_dependencies(update_ops):
-            capped_grads = [
-                (tf.clip_by_value(g, -1.0, 1.0), v)
-                for g, v in optimizer.compute_gradients(self.loss)
-            ]
-            train_step = optimizer.apply_gradients(capped_grads)
+        with tf.variable_scope('gradient/'):
+            with tf.control_dependencies(update_ops):
+                capped_grads = [
+                    (tf.clip_by_value(g, -1.0, 1.0), v)
+                    for g, v in optimizer.compute_gradients(self.loss)
+                ]
+                train_step = optimizer.apply_gradients(capped_grads)
 
         return train_step
 

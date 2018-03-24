@@ -31,5 +31,26 @@ for file in ./*.tar.gz; do
     sudo tar xzf $file
 done
 
-
 #gsutil cp -r ~/data gs://coastal-epigram-162302/inaturalist
+
+
+# Preprocess original data
+
+find /mnt/disks/image-data/ -name '*.jpg' -exec sudo mogrify -resize 600x600 {} \; -exec jpeginfo {} \; | grep -iE 'exif|error|corrupt' >> /mnt/disks/image-data/exif_and_error_files.txt &
+
+cat exif_and_error_files.txt | grep -iE EXIF  | awk '{print $1}' >> /mnt/disks/image-data/exif_files.txt
+
+cat exif_and_error_files.txt | grep -iv 'EXIF'  | awk '{print $1}' >> /mnt/disks/image-data/error_files.txt
+
+
+while read f; do
+    echo $f
+    sudo convert -format bmp $f $f.bmp
+    sudo convert -format jpg $f.bmp $f
+    sudo rm -f $f.bmp
+done < /mnt/disks/image-data/exif_files.txt
+
+mkdir test2018_bad
+mv /mnt/disks/image-data/test2018/ba8376a212476203313bbfadfbe39d62.jpg test2018_bad/
+mv /mnt/disks/image-data/test2018/ba448fcfdf84e5e89d77402ecc5fa3ce.jpg test2018_bad/
+
