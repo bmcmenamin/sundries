@@ -23,13 +23,13 @@ MODEL_PARAMS = {
     'path': './model_318',
 
     'graph': {
-        'in_sizes': [[400, 400, 1]],
+        'in_sizes': [[600, 600, 1]],
         'preinception_params': [
             {
                 'num_units': 60,
                 'kernel': [7, 7],
-                'strides': [2, 2],
-                'pool_size': [2, 2],
+                'strides': [3, 3],
+                'pool_size': [3, 3],
                 'bias': True,
                 'activation': 'relu',
                 'activity_reg': {'l1': 0.1},
@@ -38,7 +38,7 @@ MODEL_PARAMS = {
                 'num_units': 120,
                 'kernel': [3, 3],
                 'strides': [1, 1],
-                'pool_size': [2, 2],
+                'pool_size': [3, 3],
                 'bias': True,
                 'activation': 'relu',
                 'activity_reg': {'l1': 0.1},
@@ -46,17 +46,17 @@ MODEL_PARAMS = {
         ],
         'inception_params': [
             {
-                'size_1x1_output': 16,
+                'size_1x1_output': 8,
                 'downsample': 2,
                 'total_output_units': 200,
             },
             {
-                'size_1x1_output': 16,
+                'size_1x1_output': 8,
                 'downsample': 2,
                 'total_output_units': 300,
             },
             {
-                'size_1x1_output': 16,
+                'size_1x1_output': 8,
                 'downsample': 4,
                 'total_output_units': 400,
             },
@@ -65,7 +65,7 @@ MODEL_PARAMS = {
             'num_units': 300,
             'bias': True,
             'activation': 'tanh',
-            'dropout_rate': 0.0,
+            'dropout_rate': 0.01,
         },
         'num_output_categories': 8142,
         'num_targets': 1 + len(EMBED_COLS)
@@ -73,7 +73,7 @@ MODEL_PARAMS = {
     'train': {
         'num_epochs': 5000,
         'epoch_length': 1000,
-        'batch_size': 32,
+        'batch_size': 24,
         'learning_rate': 0.01,
     },
     'tensorboard': {
