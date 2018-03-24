@@ -1,4 +1,4 @@
-"""Module sets up Convolutional Siamese model"""
+"""Module sets up Convolutional Embedded model"""
 
 import numpy as np
 
@@ -42,7 +42,6 @@ class ConvEmbedModel(BaseArchitecture):
 
         return layer_stack[-1]
 
-
     def _preprocess_images(self, filename, target_size=[299, 299]):
 
         try:
@@ -56,7 +55,6 @@ class ConvEmbedModel(BaseArchitecture):
 
         incept_pred = self.INCEPTION.predict(image) # BWAAAAAAAMP
         return incept_pred
-
 
     def setup_layers(self, params):
 
