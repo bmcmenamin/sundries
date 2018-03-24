@@ -1,4 +1,4 @@
-"""Module sets up Convolutional Siamese model"""
+"""Module sets up Convolutional Embedded model"""
 
 from functools import partial
 
@@ -105,7 +105,14 @@ class ConvEmbedModel(BaseArchitecture):
         
         return concat_dropout
 
-    def _preprocess_images(self, params, filename):
+    def _preprocess_images(self, params, filenames):
+
+        return np.vstack([
+            self._preprocess_image(params, str(fname, 'utf-8'))
+            for fname in filenames
+        ])
+
+    def _preprocess_image(self, params, filename):
 
         try:
 
@@ -129,11 +136,13 @@ class ConvEmbedModel(BaseArchitecture):
             image_padded = pad(image_scaled, pads, mode='reflect')
 
             image_dtype = (1.0 * image_padded) / image_padded.ravel().max()
+            image_dtype = np.float32(image_dtype[np.newaxis, ...])
             return image_dtype
 
-        except:
+        except Exception as e:
+            print(e)
             LOGGER.warn('input %s was corrupted or something', filename)
-            return np.zeros([params['height'], params['width'], 1])
+            return np.zeros([1, params['height'], params['width'], 1], np.float32)
 
     def setup_layers(self, params):
 
@@ -170,6 +179,8 @@ class ConvEmbedModel(BaseArchitecture):
             tf.float32,
             name='image_batch'
         )
+        image_batch.set_shape([None] + in_sizes[0])
+
 
         # Downsample input before inceptions
         pre_incept_stack = [image_batch]
