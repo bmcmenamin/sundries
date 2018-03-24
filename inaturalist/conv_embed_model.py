@@ -100,7 +100,7 @@ class ConvEmbedModel(BaseArchitecture):
         return concat_dropout
 
     def _preprocess_images(self, params, filename):
-        try:
+        with tf.device('/cpu:0'):
             image_string = tf.read_file(filename)
             
             image_decoded = tf.image.decode_jpeg(
@@ -119,10 +119,6 @@ class ConvEmbedModel(BaseArchitecture):
             )
             
             return image_dtype
-
-        except InvalidArgumentError:
-            LOGGER.warn('input %s was corrupted or something', tf.compat.as_text(image_string))
-            return tf.zeros([params['height'], params['width'], 1])
 
     def setup_layers(self, params):
 
