@@ -49,9 +49,10 @@ MODEL_PARAMS = {
         'num_targets': 1 + len(EMBED_COLS)
     },
     'train': {
-        'num_epochs': 5000,
-        'epoch_length': 1000,
-        'batch_size': 128,
+        'num_epochs': 20,
+        'epoch_length': 8000,
+        'batch_size': 50,
+        'interval': 10,
         'learning_rate': 0.1,
     },
     'tensorboard': {

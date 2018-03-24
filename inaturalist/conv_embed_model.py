@@ -16,11 +16,9 @@ class ConvEmbedModel(BaseArchitecture):
 
     # pylint: disable=too-many-instance-attributes
 
-    INCEPTION = InceptionV3(
-        include_top=False,
-        pooling='max',
-        weights='imagenet',
-    )
+    def __init__(self, params):
+        self.inception = None
+        super().__init__(params)
 
     def build_embedder(self, in_layer, dense_params):
 
@@ -42,7 +40,19 @@ class ConvEmbedModel(BaseArchitecture):
 
         return layer_stack[-1]
 
-    def _preprocess_images(self, filename, target_size=[299, 299]):
+    def _preprocess_images(self, filenames):
+
+        image_stack = np.vstack([
+            self._preprocess_image(str(fname, 'utf-8'))
+            for fname in filenames
+        ])
+
+        with self.graph.as_default():
+            incept_preds = self.inception.predict(image_stack) # BWAAAAAAAMP
+
+        return incept_preds
+
+    def _preprocess_image(self, filename, target_size=[299, 299]):
 
         try:
             image = load_img(filename, target_size=target_size)
@@ -51,10 +61,9 @@ class ConvEmbedModel(BaseArchitecture):
             image = imagenet_utils.preprocess_input(image)
         except:
             LOGGER.warn('input %s was, like, corrupted or something?', filename)
-            image = np.zeros(target_size + [3])
+            image = np.zeros([1] + target_size + [3])
 
-        incept_pred = self.INCEPTION.predict(image) # BWAAAAAAAMP
-        return incept_pred
+        return image
 
     def setup_layers(self, params):
 
@@ -68,12 +77,20 @@ class ConvEmbedModel(BaseArchitecture):
         num_output_categories = params.get('num_output_categories', 1)
         num_targets = params.get('num_targets', 1)
 
+        with tf.device('/cpu:0'):
+            with tf.variable_scope('inception'):
+                self.inception = InceptionV3(
+                    include_top=False,
+                    pooling='max',
+                    weights='imagenet',
+                )
+
         #
         # Build model
         #
 
         in_layers = [
-            tf.placeholder("string", name="input_{}".format(idx), shape=[None])
+            tf.placeholder("string", name="input_filenames", shape=[None])
         ]
 
         with tf.device('/cpu:0'):
@@ -84,6 +101,8 @@ class ConvEmbedModel(BaseArchitecture):
                     tf.float32,
                     name='image_batch'
                 )
+                image_batch.set_shape([None, 2048])
+                image_batch = tf.stop_gradient(image_batch)
 
         # Rejigger the embeddding layer from inceptionV3
         with tf.device('/gpu:0'):
@@ -135,7 +154,7 @@ class ConvEmbedModel(BaseArchitecture):
                 )
             )
 
-            loss = embed_loss + output_loss
+            loss = 100 * embed_loss + output_loss
 
         tb_scalars = {
             'embed_loss': embed_loss,
@@ -155,7 +174,8 @@ class ConvEmbedModel(BaseArchitecture):
         with tf.variable_scope('gradient/'):
             with tf.control_dependencies(update_ops):
                 capped_grads = [
-                    (tf.clip_by_value(g, -1.0, 1.0), v)
+                    (g, v) if g is None
+                    else (tf.clip_by_value(g, -1.0, 1.0), v)
                     for g, v in optimizer.compute_gradients(self.loss)
                 ]
                 train_step = optimizer.apply_gradients(capped_grads)
