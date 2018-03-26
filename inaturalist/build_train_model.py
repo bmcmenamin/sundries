@@ -28,20 +28,20 @@ MODEL_PARAMS = {
             {
                 'num_units': 2000,
                 'bias': True,
-                'activation': 'tanh',
-                'dropout_rate': 0.2,
+                'activation': 'relu',
+                'dropout_rate': 0.4,
             },
             {
                 'num_units': 1000,
                 'bias': True,
-                'activation': 'tanh',
-                'dropout_rate': 0.2,
+                'activation': 'relu',
+                'dropout_rate': 0.4,
             },
             {
                 'num_units': 300,
                 'bias': True,
-                'activation': 'tanh',
-                'dropout_rate': 0.2,
+                'activation': 'relu',
+                'dropout_rate': 0.4,
             },
 
         ],
@@ -50,10 +50,10 @@ MODEL_PARAMS = {
     },
     'train': {
         'num_epochs': 20,
-        'epoch_length': 8000,
-        'batch_size': 50,
-        'interval': 10,
-        'learning_rate': 0.1,
+        'epoch_length': 15300,
+        'batch_size': 32,
+        'interval': 25,
+        'learning_rate': 0.01,
     },
     'tensorboard': {
         'scalars': ['embed_loss', 'output_loss']
