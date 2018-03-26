@@ -148,13 +148,13 @@ class ConvEmbedModel(BaseArchitecture):
                     biases=decode_bias,
                     labels=target_layers[0],
                     inputs=embeds,
-                    num_sampled=num_output_categories // 10,
+                    num_sampled=num_output_categories // 4,
                     num_classes=num_output_categories,
                     remove_accidental_hits=True,
                 )
             )
 
-            loss = 100 * embed_loss + output_loss
+            loss = 1000 * embed_loss + output_loss
 
         tb_scalars = {
             'embed_loss': embed_loss,

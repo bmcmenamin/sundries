@@ -13,14 +13,14 @@ DATA_DIR = ROOT_DIR
 TRAIN_FILE = os.path.join(ROOT_DIR, 'train2018.json')
 VALID_FILE = os.path.join(ROOT_DIR, 'val2018.json')
 
-EMBED_COLS = ['kingdom', 'phylum', 'class', 'order', 'family', 'genus']
+#EMBED_COLS = ['kingdom', 'phylum', 'class', 'order', 'family', 'genus']
+EMBED_COLS = ['class', 'order', 'family', 'genus']
 GROUPING_COL = 'family'
 OUTPUT_COL = 'category_id'
 
-
 MODEL_PARAMS = {
-    'name': 'model_324',
-    'path': './model_324',
+    'name': 'model_326',
+    'path': './model_326',
 
     'graph': {
 
@@ -30,20 +30,7 @@ MODEL_PARAMS = {
                 'bias': True,
                 'activation': 'relu',
                 'dropout_rate': 0.4,
-            },
-            {
-                'num_units': 1000,
-                'bias': True,
-                'activation': 'relu',
-                'dropout_rate': 0.4,
-            },
-            {
-                'num_units': 300,
-                'bias': True,
-                'activation': 'relu',
-                'dropout_rate': 0.4,
-            },
-
+            }
         ],
         'num_output_categories': 8142,
         'num_targets': 1 + len(EMBED_COLS)
