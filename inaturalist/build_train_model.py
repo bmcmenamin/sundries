@@ -29,7 +29,31 @@ MODEL_PARAMS = {
                 'num_units': 2000,
                 'bias': True,
                 'activation': 'relu',
-                'dropout_rate': 0.4,
+                'dropout_rate': 0.2,
+            },
+            {
+                'num_units': 1000,
+                'bias': True,
+                'activation': 'relu',
+                'dropout_rate': 0.2,
+            },
+            {
+                'num_units': 1000,
+                'bias': True,
+                'activation': 'relu',
+                'dropout_rate': 0.2,
+            },
+            {
+                'num_units': 1000,
+                'bias': True,
+                'activation': 'relu',
+                'dropout_rate': 0.2,
+            },
+            {
+                'num_units': 300,
+                'bias': True,
+                'activation': 'relu',
+                'dropout_rate': 0.2,
             }
         ],
         'num_output_categories': 8142,

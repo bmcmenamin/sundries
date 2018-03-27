@@ -113,21 +113,24 @@ class ConvEmbedModel(BaseArchitecture):
             with tf.variable_scope('decoder'):
 
                 decode_weights = tf.Variable(
-                    tf.random_normal([num_output_categories, embed_dim]),
+                    tf.ones([num_output_categories, embed_dim]),
                     name='weights'
                 )
 
                 decode_bias = tf.Variable(
-                    tf.random_normal([num_output_categories]),
+                    tf.ones([num_output_categories]),
                     name='bias'
                 )
 
+                out_layers_preact = tf.matmul(embeds, decode_weights, transpose_b=True) + decode_bias
+
                 out_layers = [
-                    tf.matmul(embeds, decode_weights, transpose_b=True) + decode_bias        
+                    #tf.softmax(out_layers_preact)
+                   out_layers_preact
                 ]
 
                 target_layers = [
-                    tf.placeholder("float", name="target_{}".format(idx), shape=[None, 1])
+                    tf.placeholder("int32", name="target_{}".format(idx), shape=[None, 1])
                     for idx in range(num_targets)
                 ]
 
@@ -138,22 +141,29 @@ class ConvEmbedModel(BaseArchitecture):
                 tf.contrib.losses.metric_learning.triplet_semihard_loss(
                     tf.reshape(targ, [-1]), embeds
                 )
-                for targ in target_layers
+                for targ in target_layers[1:]
             ])
 
-
             output_loss = tf.reduce_sum(
-                tf.contrib.nn.sampled_sparse_softmax_loss(
-                    weights=decode_weights,
-                    biases=decode_bias,
-                    labels=target_layers[0],
-                    inputs=embeds,
-                    num_sampled=num_output_categories // 4,
-                    num_classes=num_output_categories,
-                    remove_accidental_hits=True,
+                tf.nn.sparse_softmax_cross_entropy_with_logits(
+                    labels=tf.reshape(target_layers[0], [-1]),
+                    logits=out_layers_preact,
+                    name='softmax_loss'
                 )
-            )
+             )
 
+#            output_loss = tf.reduce_sum(
+#                tf.contrib.nn.sampled_sparse_softmax_loss(
+#                    weights=decode_weights,
+#                    biases=decode_bias,
+#                    labels=target_layers[0],
+#                    inputs=embeds,
+#                    num_sampled=num_output_categories // 4,
+#                    num_classes=num_output_categories,
+#                    remove_accidental_hits=True,
+#                )
+#            )
+#
             loss = 1000 * embed_loss + output_loss
 
         tb_scalars = {
