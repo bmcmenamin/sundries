@@ -26,15 +26,16 @@ WORK_DIR=$HOME_DIR
 GCLOUD_BUCKET=gs://coastal-epigram-162302
 
 # Set the version/branch of tensorflow you'd like to build
-TF_VERSION=1.5
+TF_VERSION=1.6
 
 # Whether to set up a GPU
 INSTALL_NVIDIA_UTILS=true
 CUDA_DEB_FILE=cuda-repo-ubuntu1604-9-0-local_9.0.176-1_amd64-deb
-CUDNN_TGZ_FILE=cudnn-9.0-linux-x64-v7.1.tgz
+CUDNN_TGZ_FILE=cudnn-9.0-linux-x64-v7.tgz
+
 
 # Build TF from source? If false, it'll pull an old version from GCloud
-BUILD_NEW_TF=true
+BUILD_NEW_TF=false
 
 # Install some base packages
 sudo apt-get install htop git dirmngr aptitude -y
@@ -106,8 +107,10 @@ if [ "$INSTALL_NVIDIA_UTILS" = true ]; then
 
     sudo mkdir $CUDA_HOME/include
     sudo cp cuda/include/cudnn.h $CUDA_HOME/include/cudnn.h
-    sudo cp cuda/lib64/libcudnn* $CUDA_HOME/lib64
-    sudo chmod -R a+r $CUDA_HOME
+
+    sudo cp cuda/lib64/* $CUDA_HOME/lib64/
+    sudo chmod a+r $CUDA_HOME/include* $CUDA_HOME/lib64/libcudnn*
+    sudo ldconfig $CUDA_HOME/lib64
 
     sudo apt-get install cuda-command-line-tools-9-0 -y
     echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CUDA_HOME/extras/CUPTI/lib64' >> $HOME_DIR/.bashrc
@@ -214,6 +217,8 @@ if [[ "$INSTALL_NVIDIA_UTILS" = true && "$BUILD_NEW_TF" = false ]]; then
 else
     WHL_TO_INSTALL=`ls -1t $WORK_DIR/tensorflow/bazel_output/tensorflow-$TF_VERSION*.whl | head -n1`
 fi
+
+sudo apt-get install python3-dev python3-setuptools python3-pip python3-wheel python3-numpy -y
 
 sudo -H pip3 install -U pip numpy scipy
 sudo -H pip3 install $WHL_TO_INSTALL
