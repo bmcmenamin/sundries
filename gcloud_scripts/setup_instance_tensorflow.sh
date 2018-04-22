@@ -107,10 +107,10 @@ if [ "$INSTALL_NVIDIA_UTILS" = true ]; then
 
     sudo mkdir $CUDA_HOME/include
     sudo cp cuda/include/cudnn.h $CUDA_HOME/include/cudnn.h
+
     sudo cp cuda/lib64/* $CUDA_HOME/lib64/
     sudo chmod a+r $CUDA_HOME/include* $CUDA_HOME/lib64/libcudnn*
     sudo ldconfig $CUDA_HOME/lib64
-
 
     sudo apt-get install cuda-command-line-tools-9-0 -y
     echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CUDA_HOME/extras/CUPTI/lib64' >> $HOME_DIR/.bashrc
