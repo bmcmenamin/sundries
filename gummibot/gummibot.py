@@ -63,7 +63,7 @@ if __name__ == '__main__':
     OLDEST_REPLY_DAYS = 14
 
     SEARCH_PARAMS = {
-        'q': '"gummi\ bears\ theme\ song" -williams -toto',
+        'q': '"gummi\ bears\ theme" OR "gummi\ bears\ song" OR "gummi\ bears\ intro" -williams -toto',
         'lang': 'en',
         'since': (
             datetime.datetime.now() - datetime.timedelta(days=OLDEST_REPLY_DAYS)
