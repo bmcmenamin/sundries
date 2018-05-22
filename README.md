@@ -6,6 +6,7 @@ Little things I want to keep but not give their own repo
   * write up [here](https://bmcmenamin.github.io/2018/01/24/fluff-balls.html)
 * `gcloud_scripts` has scripts used to set up tensorflow environments on Google Cloud
   * write up [here](https://bmcmenamin.github.io/2018/03/17/setting-up-gcloud.html)
+* `gummibot` has the twitterbot for running [this account](https://twitter.com/johnwilliamsso1/with_replies?lang=en)
 * `inaturalist` has some machine vision models built for a Kaggle challenge using ModelWrangler.
   * I never got around to submitting results, so no write up
 * `moby_sequel` teaching a robot to write a seque to Moby Dick
