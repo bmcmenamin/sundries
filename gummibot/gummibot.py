@@ -49,6 +49,7 @@ def search_and_reply(search_params, payload):
 
     for tweet in search_messages(api, search_params):
         if tweet.author.id not in previous_targets:
+            print("Tweeting at: {}".format(tweet.author.screen_name))
             api.update_status(
                 payload.format(target=tweet.author.screen_name),
                 in_reply_to_status_id=tweet.id
