@@ -23,7 +23,9 @@ def rate_limiter(cursor):
         try:
             yield cursor.next()
         except tweepy.RateLimitError:
-            time.sleep(15 * 60)
+            time.sleep(60)
+        except tweepy.error.TweepError:
+            time.sleep(60)
 
 
 def get_user_recent_tweets(api, id):
@@ -50,6 +52,7 @@ def search_and_reply(search_params, payload):
     for tweet in search_messages(api, search_params):
         if tweet.author.id not in previous_targets:
             print("Tweeting at: {}".format(tweet.author.screen_name))
+
             api.update_status(
                 payload.format(target=tweet.author.screen_name),
                 in_reply_to_status_id=tweet.id
@@ -63,7 +66,7 @@ if __name__ == '__main__':
     OLDEST_REPLY_DAYS = 14
 
     SEARCH_PARAMS = {
-        'q': '"gummi\ bears\ theme" OR "gummi\ bears\ song" OR "gummi\ bears\ intro" -williams -toto',
+        'q': '"gummi\ bears\ theme" OR "gummi\ bears\ song" OR "gummi\ bears\ intro" OR "gummy\ bears\ theme" OR "gummy\ bears\ song" OR "gummy\ bears\ intro" OR -williams -toto',
         'lang': 'en',
         'since': (
             datetime.datetime.now() - datetime.timedelta(days=OLDEST_REPLY_DAYS)
