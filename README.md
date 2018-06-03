@@ -2,6 +2,8 @@
 Little things I want to keep but not give their own repo
 * `age_distro` has code for analyzing the distribution of ages in the US census over time.
   * write up [here](https://bmcmenamin.github.io/2017/11/19/census.html)
+* `bias_penalty` has code for testing machine bias in models and how different losses in model_wrangler can help mitigate it
+  * write up [here](https://bmcmenamin.github.io/2018/06/03/algorithm_bias.html)
 * `fluff_ball` has code for analyzing the distribution of data in a multivariate gaussian
   * write up [here](https://bmcmenamin.github.io/2018/01/24/fluff-balls.html)
 * `gcloud_scripts` has scripts used to set up tensorflow environments on Google Cloud
