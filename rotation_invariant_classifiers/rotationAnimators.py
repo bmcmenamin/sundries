@@ -135,12 +135,16 @@ class RotatingClassifierAnimation(object):
         ax.set_xlabel("False Positive Rate")
         ax.set_ylabel("True Positive Rate")
 
+        _ticks = [np.round(x, 2) for x in np.arange(0.0, 1.0 + 0.01, 0.25)]
+
         ax.get_xaxis().set_visible(True)
         ax.get_yaxis().set_visible(True)
-        ax.set_ylim(0, 1)
-        ax.set_xlim(0, 1)
-        ax.set_yticklabels([0.0, 0.5, 1.0])
-        ax.set_xticklabels([0.0, 0.5, 1.0])
+        ax.set_ylim(_ticks[0], _ticks[1])
+        ax.set_xlim(_ticks[0], _ticks[1])
+        ax.set_yticks(_ticks)
+        ax.set_xticks(_ticks)
+        ax.set_yticklabels(_ticks)
+        ax.set_xticklabels(_ticks)
         ax.set_aspect('equal')
 
         ax.plot([0, 1], [0, 1], '--k', linewidth=0.5)
@@ -165,10 +169,20 @@ class RotatingClassifierAnimation(object):
         ax.set_xlabel("Input rotation (deg)")
         ax.get_yaxis().set_visible(True)
         ax.get_xaxis().set_visible(True)
-        ax.set_ylim(self.min_auc, 1.0)
+
+        yticks = [
+            np.round(x, 2) for
+            x in np.arange(0.05 * np.floor(self.min_auc / 0.05), 1.0, 0.05)
+        ]
+
+        xticks = [0, 90, 180, 270, 360]
+
+        ax.set_ylim(yticks[0], yticks[-1])
         ax.set_xlim(0, 360)
-        ax.set_yticklabels([self.min_auc, 1.0])
-        ax.set_xticklabels([0, 90, 180, 270, 360])
+        ax.set_yticks(yticks)
+        ax.set_yticklabels(yticks)
+        ax.set_xticks(xticks)
+        ax.set_xticklabels(xticks)
 
         ax.plot([-1], [0], '--k')
         for line in ax.lines:
