@@ -10,7 +10,7 @@ body {
   padding: 4em 1em;
 
   background: linear-gradient(236deg, #ff69b4, #0033cc, #4D79FF, #7CFC00, #263D80);
-  background-size: 1000% 1000%;
+  background-size: 2000% 2000%;
 
   -webkit-animation: BgGradient 16s ease infinite;
   -moz-animation: BgGradient 16s ease infinite;
