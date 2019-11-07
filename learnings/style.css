@@ -1,0 +1,65 @@
+@import 'https://fonts.googleapis.com/css?family=Poppins';
+
+body {
+  margin: 0 auto;
+  max-width: 28em;
+
+  font-family: Poppins, Impact, sans-serif;
+
+  line-height: 1.5;
+  padding: 4em 1em;
+
+  background: linear-gradient(236deg, #ff69b4, #59ff29, #2156eb, #e8b454);
+  background-size: 1000% 1000%;
+
+  -webkit-animation: BgGradient 16s ease infinite;
+  -moz-animation: BgGradient 16s ease infinite;
+  -o-animation: BgGradient 16s ease infinite;
+  animation: BgGradient 16s ease infinite;
+}
+
+h1 {
+  margin-top: 1em;
+  padding-top: 1em;
+  color: #ddd;
+  text-align: center
+}
+
+.naughtyword {
+  font-style: italic;
+  font-weight: bold;
+}
+
+
+@-webkit-keyframes BgGradient {
+    0%{background-position:10% 0%}
+    20%{background-position:30% 70%}
+    40%{background-position:70% 30%}
+    60%{background-position:80% 10%}
+    80%{background-position:50% 50%}
+    100%{background-position:10% 0%}
+}
+@-moz-keyframes BgGradient {
+    0%{background-position:10% 0%}
+    20%{background-position:30% 70%}
+    40%{background-position:70% 30%}
+    60%{background-position:80% 10%}
+    80%{background-position:50% 50%}
+    100%{background-position:10% 0%}
+}
+@-o-keyframes BgGradient {
+    0%{background-position:10% 0%}
+    20%{background-position:30% 70%}
+    40%{background-position:70% 30%}
+    60%{background-position:80% 10%}
+    80%{background-position:50% 50%}
+    100%{background-position:10% 0%}
+}
+@keyframes BgGradient {
+    0%{background-position:10% 0%}
+    20%{background-position:30% 70%}
+    40%{background-position:70% 30%}
+    60%{background-position:80% 10%}
+    80%{background-position:50% 50%}
+    100%{background-position:10% 0%}
+}
