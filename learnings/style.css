@@ -1,0 +1,57 @@
+@import 'https://fonts.googleapis.com/css?family=Poppins';
+
+body {
+  margin: 0 auto;
+  max-width: 28em;
+
+  font-family: Poppins, Impact, sans-serif;
+
+  line-height: 1.5;
+  padding: 4em 1em;
+
+  background: linear-gradient(236deg, #ff69b4, #0033cc, #4D79FF, #7CFC00, #263D80);
+  background-size: 1000% 1000%;
+
+  -webkit-animation: BgGradient 16s ease infinite;
+  -moz-animation: BgGradient 16s ease infinite;
+  -o-animation: BgGradient 16s ease infinite;
+  animation: BgGradient 16s ease infinite;
+}
+
+h1,
+h2 {
+  margin-top: 1em;
+  padding-top: 1em;
+  color: #ddd;
+  text-align: center
+}
+
+
+@-webkit-keyframes BgGradient {
+    0%{background-position:10% 10%}
+    25%{background-position:10% 90%}
+    50%{background-position:90% 90%}
+    75%{background-position:90% 10%}
+    100%{background-position:10% 10%}
+}
+@-moz-keyframes BgGradient {
+    0%{background-position:10% 10%}
+    25%{background-position:10% 90%}
+    50%{background-position:90% 90%}
+    75%{background-position:90% 10%}
+    100%{background-position:10% 10%}
+}
+@-o-keyframes BgGradient {
+    0%{background-position:10% 10%}
+    25%{background-position:10% 90%}
+    50%{background-position:90% 90%}
+    75%{background-position:90% 10%}
+    100%{background-position:10% 10%}
+}
+@keyframes BgGradient {
+    0%{background-position:10% 10%}
+    25%{background-position:10% 90%}
+    50%{background-position:90% 90%}
+    75%{background-position:90% 10%}
+    100%{background-position:10% 10%}
+}
