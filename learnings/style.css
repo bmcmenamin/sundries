@@ -9,7 +9,7 @@ body {
   line-height: 1.5;
   padding: 4em 1em;
 
-  background: linear-gradient(236deg, #ff69b4, #59ff29, #2156eb, #e8b454);
+  background: linear-gradient(236deg, #ff69b4, #0033cc, #4D79FF, #7CFC00, #263D80);
   background-size: 1000% 1000%;
 
   -webkit-animation: BgGradient 16s ease infinite;
@@ -18,48 +18,40 @@ body {
   animation: BgGradient 16s ease infinite;
 }
 
-h1 {
+h1,
+h2 {
   margin-top: 1em;
   padding-top: 1em;
   color: #ddd;
   text-align: center
 }
 
-.naughtyword {
-  font-style: italic;
-  font-weight: bold;
-}
-
 
 @-webkit-keyframes BgGradient {
-    0%{background-position:10% 0%}
-    20%{background-position:30% 70%}
-    40%{background-position:70% 30%}
-    60%{background-position:80% 10%}
-    80%{background-position:50% 50%}
-    100%{background-position:10% 0%}
+    0%{background-position:10% 10%}
+    25%{background-position:10% 90%}
+    50%{background-position:90% 90%}
+    75%{background-position:90% 10%}
+    100%{background-position:10% 10%}
 }
 @-moz-keyframes BgGradient {
-    0%{background-position:10% 0%}
-    20%{background-position:30% 70%}
-    40%{background-position:70% 30%}
-    60%{background-position:80% 10%}
-    80%{background-position:50% 50%}
-    100%{background-position:10% 0%}
+    0%{background-position:10% 10%}
+    25%{background-position:10% 90%}
+    50%{background-position:90% 90%}
+    75%{background-position:90% 10%}
+    100%{background-position:10% 10%}
 }
 @-o-keyframes BgGradient {
-    0%{background-position:10% 0%}
-    20%{background-position:30% 70%}
-    40%{background-position:70% 30%}
-    60%{background-position:80% 10%}
-    80%{background-position:50% 50%}
-    100%{background-position:10% 0%}
+    0%{background-position:10% 10%}
+    25%{background-position:10% 90%}
+    50%{background-position:90% 90%}
+    75%{background-position:90% 10%}
+    100%{background-position:10% 10%}
 }
 @keyframes BgGradient {
-    0%{background-position:10% 0%}
-    20%{background-position:30% 70%}
-    40%{background-position:70% 30%}
-    60%{background-position:80% 10%}
-    80%{background-position:50% 50%}
-    100%{background-position:10% 0%}
+    0%{background-position:10% 10%}
+    25%{background-position:10% 90%}
+    50%{background-position:90% 90%}
+    75%{background-position:90% 10%}
+    100%{background-position:10% 10%}
 }
