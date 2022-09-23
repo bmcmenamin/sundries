@@ -48,7 +48,7 @@ pexpect==4.8.0
 pickleshare==0.7.5
 prompt-toolkit==3.0.22
 proto-plus==1.19.6
-protobuf==3.17.3
+protobuf==3.18.3
 ptyprocess==0.7.0
 pyarrow==4.0.1
 pyasn1==0.4.8
