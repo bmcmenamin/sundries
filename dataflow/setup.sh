@@ -1,1 +1,0 @@
-export GOOGLE_APPLICATION_CREDENTIALS=/Users/mcmenamin/GitHub/sundries/dataflow/coastal-epigram-162302-613c754a43c4.json
