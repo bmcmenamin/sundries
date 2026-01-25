@@ -398,6 +398,7 @@ def generate_javascript(config: dict) -> str:
     form_fields = config.get("google_form_fields", {})
     entry_qtitle = form_fields.get("question_title", "")
     entry_feedback = form_fields.get("feedback_text", "")
+    entry_respondent = form_fields.get("respondent_id", "")
 
     return f"""
 // Spoiler toggle functionality
@@ -419,9 +420,14 @@ const FORM_CONFIG = {{
     formId: '{form_id}',
     fields: {{
         questionTitle: '{entry_qtitle}',
-        feedbackText: '{entry_feedback}'
+        feedbackText: '{entry_feedback}',
+        respondentId: '{entry_respondent}'
     }}
 }};
+
+// Read respondent from URL query parameter (e.g., ?respondent=alice)
+const urlParams = new URLSearchParams(window.location.search);
+const RESPONDENT = urlParams.get('respondent') || 'anonymous';
 
 function submitFeedback(questionNumber, questionTitle) {{
     const input = document.getElementById(`feedback-${{questionNumber}}`);
@@ -446,6 +452,9 @@ function submitFeedback(questionNumber, questionTitle) {{
     }}
     if (FORM_CONFIG.fields.feedbackText) {{
         params.set(FORM_CONFIG.fields.feedbackText, feedbackText);
+    }}
+    if (FORM_CONFIG.fields.respondentId) {{
+        params.set(FORM_CONFIG.fields.respondentId, RESPONDENT);
     }}
 
     // Submit via hidden iframe to avoid leaving the page

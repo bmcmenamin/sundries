@@ -258,6 +258,7 @@ def build_config():
         'google_form_fields': {
             'question_title': kv.get('google_form__question_title', ''),
             'feedback_text': kv.get('google_form__feedback_text', ''),
+            'respondent_id': kv.get('google_form__respondent_id', ''),
         },
         'audio_base_url': kv.get('audio_base_url', ''),
         'instructions': {
