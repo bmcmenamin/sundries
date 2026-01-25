@@ -34,6 +34,32 @@ def is_truthy(value: str) -> bool:
     return value.strip().lower() in ('true', 'yes', '1', 'x', 'included')
 
 
+def extract_clip_timing(filepath: str) -> tuple[int, int]:
+    """
+    Extract start and end times from a snippet filename.
+
+    Filenames follow the pattern: {hash}_{start_ms}_{end_ms}.mp3
+    Example: 2275d0f0b4b5_10000_15123.mp3 -> (10000, 15123)
+
+    Returns (0, 0) if timing cannot be extracted.
+    """
+    try:
+        filename = Path(filepath).stem  # Remove extension
+        parts = filename.split('_')
+        if len(parts) >= 3:
+            start_ms = int(parts[-2])
+            end_ms = int(parts[-1])
+            return (start_ms, end_ms)
+    except (ValueError, IndexError):
+        pass
+    return (0, 0)
+
+
+def sort_clips_by_timing(clips: list[str]) -> list[str]:
+    """Sort audio clips by start time, then end time."""
+    return sorted(clips, key=extract_clip_timing)
+
+
 def read_kv_store(spreadsheet) -> dict:
     """Read key-value pairs from kv_store tab."""
     worksheet = spreadsheet.worksheet(KV_STORE_TAB)
@@ -190,6 +216,9 @@ def build_config():
     for idx, song in enumerate(songs, start=1):
         title_lower = song['title'].lower()
         audiofiles = snippets.get(title_lower, [])
+
+        # Sort clips by start time, then end time for consistent ordering
+        audiofiles = sort_clips_by_timing(audiofiles)
 
         if not audiofiles:
             missing_audio_count += 1
