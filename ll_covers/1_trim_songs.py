@@ -88,7 +88,7 @@ def build_songs_lookup(worksheet):
 def trim_audio(input_path, output_path, start_time, end_time):
     """
     Trim an MP3 file to the specified start and end times using ffmpeg.
-    Uses millisecond precision for accurate trimming.
+    Applies postprocessing: stereo conversion, volume normalization, fade in/out.
 
     Args:
         input_path: Path to the input MP3 file
@@ -103,7 +103,28 @@ def trim_audio(input_path, output_path, start_time, end_time):
         # Ensure output directory exists
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Build ffmpeg command with millisecond precision
+        # Calculate duration
+        duration = (end_time - start_time) if end_time is not None else None
+
+        # Build audio filter chain:
+        # 1. Convert to stereo (aformat)
+        # 2. Normalize volume using EBU R128 loudness normalization (loudnorm)
+        # 3. Add short fade in/out for smooth playback (afade)
+        fade_duration = 0.1  # 100ms fade
+        filters = [
+            'aformat=channel_layouts=stereo',  # Force stereo output
+            'loudnorm=I=-16:TP=-1.5:LRA=11',   # EBU R128 normalization
+        ]
+
+        # Add fade in/out if we know the duration
+        if duration is not None and duration > (fade_duration * 2):
+            fade_out_start = duration - fade_duration
+            filters.append(f'afade=t=in:st=0:d={fade_duration}')
+            filters.append(f'afade=t=out:st={fade_out_start:.3f}:d={fade_duration}')
+
+        filter_chain = ','.join(filters)
+
+        # Build ffmpeg command
         cmd = [
             'ffmpeg',
             '-i', str(input_path),
@@ -111,18 +132,21 @@ def trim_audio(input_path, output_path, start_time, end_time):
         ]
 
         # Add duration if end_time is specified
-        if end_time is not None:
-            duration = end_time - start_time
-            cmd.extend(['-t', f'{duration:.3f}'])  # Duration with ms precision
+        if duration is not None:
+            cmd.extend(['-t', f'{duration:.3f}'])
 
-        # Output options
+        # Audio processing options
         cmd.extend([
-            '-c', 'copy',  # Copy codec (fast, no re-encoding)
-            '-y',  # Overwrite output file if exists
+            '-af', filter_chain,           # Audio filters
+            '-ar', '44100',                # Sample rate: 44.1kHz (CD quality)
+            '-ac', '2',                    # Channels: stereo
+            '-b:a', '192k',                # Bitrate: 192kbps (good quality)
+            '-y',                          # Overwrite output file if exists
             str(output_path)
         ])
 
         print(f"  Trimming from {start_time:.3f}s to {end_time:.3f}s" if end_time else f"  Trimming from {start_time:.3f}s to end")
+        print(f"  Applying: stereo, loudnorm, fade, 192kbps")
         print(f"  Saving to {output_path}")
 
         # Run ffmpeg
