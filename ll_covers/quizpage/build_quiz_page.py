@@ -86,7 +86,7 @@ def resolve_audio_path(path: str, base_url: str) -> str:
 
     - gs://bucket/path -> https://storage.googleapis.com/bucket/path
     - https://... -> pass through unchanged
-    - Relative path + base_url -> concatenate
+    - Relative path + base_url -> use just the filename with base_url
     - Relative path alone -> use as-is (for local file:// access)
     """
     if path.startswith("gs://"):
@@ -97,7 +97,10 @@ def resolve_audio_path(path: str, base_url: str) -> str:
         return path
 
     if base_url:
-        return base_url.rstrip("/") + "/" + path.lstrip("/")
+        # When using base_url, extract just the filename since files are
+        # uploaded to GCS with flat structure (no directory hierarchy)
+        filename = Path(path).name
+        return base_url.rstrip("/") + "/" + filename
 
     return path
 
