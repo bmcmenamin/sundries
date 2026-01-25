@@ -9,6 +9,7 @@ Reads from three tabs:
 """
 
 import json
+import random
 import subprocess
 import sys
 from pathlib import Path
@@ -208,6 +209,9 @@ def build_config():
     print("Reading snippets tab...")
     snippets = read_snippets(spreadsheet)
     print(f"  Found snippets for {len(snippets)} songs")
+
+    # Randomize question order
+    random.shuffle(songs)
 
     # Build questions array
     questions = []
