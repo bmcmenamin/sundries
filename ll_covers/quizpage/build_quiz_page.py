@@ -21,6 +21,8 @@ import sys
 from html import escape
 from pathlib import Path
 
+import markdown
+
 
 def validate_config(config: dict) -> list[str]:
     """
@@ -111,7 +113,9 @@ def generate_instructions_html(instructions: dict, base_url: str) -> str:
 
     text = instructions.get("instructions_text", "")
     if text:
-        parts.append(f'<p class="instructions-text">{escape(text)}</p>')
+        # Render markdown to HTML (handles newlines, bold, italic, lists, etc.)
+        text_html = markdown.markdown(text)
+        parts.append(f'<div class="instructions-text">{text_html}</div>')
 
     sample = instructions.get("sample_audiofile")
     if sample:
@@ -127,7 +131,8 @@ def generate_instructions_html(instructions: dict, base_url: str) -> str:
 
     post_text = instructions.get("post_sample_text", "")
     if post_text:
-        parts.append(f'<p class="post-sample-text">{escape(post_text)}</p>')
+        post_text_html = markdown.markdown(post_text)
+        parts.append(f'<div class="post-sample-text">{post_text_html}</div>')
 
     return "\n".join(parts)
 
