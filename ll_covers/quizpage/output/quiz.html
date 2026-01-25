@@ -194,8 +194,8 @@ footer {
         </header>
 
         <section class="instructions">
-            <div class="instructions-text"><p>Each question below contains has a snippet from a song that went on to have a well-known cover version by a different artist. We want the name of the artist that release the cover version, NOT the artist performing in the recorded sample.</p>
-<p>Some songs have inspired multiple well-known covers, so pay attention to the <em>year</em> of the cover as well.</p>
+            <div class="instructions-text"><p>Each question below contains has a snippet from a song that went on to have a well-known cover version by a different artist. We want the name of the <em>artist that released the cover version</em>, <em>not</em> the artist performing the recorded sample.
+Note that some songs have inspired multiple well-known covers, so pay attention to the <em>year</em> of the cover given in the question which sould narrow it down to a single cover.</p>
 <p>For example, if the question states 'Original: 1974; Cover: 1992.' and had this clip:</p></div>
 
         <div class="audio-player">
@@ -206,6 +206,7 @@ footer {
             </audio>
         </div>
 <div class="post-sample-text"><p>You should listen to that sample and figure out that it is the song <em>I Will Always Love You</em> (originally released by Dolly Parton in 1974). In 1992, it was covered in by Whitney Houston. So the correct answer should be "Whitney Houston".</p>
+<p>Other caveats/comments:</p>
 <ul>
 <li>
 <p>I need to whittle this down to a smaller set, so I've got a feedback box for each question. Let me know if the snippet i selected wasnt good (too hard/too easy), the cover wasn't sufficiently famous that you think people would know it, or whether if any of them are particulary interesting and that i should be sure to include it.</p>
@@ -216,20 +217,31 @@ footer {
 <li>
 <p>I've tried to avoid picking song clips that include the name of the song, but I'm not sure if that's important seeing that the answer is the <em>artist</em> and not the song. In some cases it'd make it too easy, but I'm not sure if I've made things needlessly hard by imposing that rule</p>
 </li>
+<li>
+<p>There are some duplicate artists in the originals and for answers. I'll make sure to avoid that in the final question set</p>
+</li>
 </ul></div>
         </section>
 
         <section class="questions">
             
-    <div class="question" data-question-number="1" data-question-title="Mony mony">
-        <h3>1.&nbsp;Original: 1968; Cover: 1981</h3>
+    <div class="question" data-question-number="1" data-question-title="Tainted love">
+        <h3>1.&nbsp;Original: 1965; Cover: 1981</h3>
 
         <div class="audio-players">
             
         <div class="audio-player">
-            <label>Clip:</label>
+            <label>Potential Clip 1:</label>
             <audio controls>
-                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/2c5d5ebbd0ad_13052_16352.mp3" type="audio/mpeg">
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/d84fccf97178_3384_9696.mp3" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+
+        <div class="audio-player">
+            <label>Potential Clip 2:</label>
+            <audio controls>
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/d84fccf97178_89812_93937.mp3" type="audio/mpeg">
                 Your browser does not support the audio element.
             </audio>
         </div>
@@ -240,42 +252,7 @@ footer {
                 Show Answer
             </button>
             <div class="spoiler-content hidden">
-                <p class="answer">Billy Idol (Original: Tommy James &amp; The Shondells)</p>
-            </div>
-        </div>
-        
-        <div class="feedback-section">
-            <label for="feedback-1">Feedback:</label>
-            <input type="text"
-                   id="feedback-1"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(1, 'Mony mony')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="2" data-question-title="Twist and shout">
-        <h3>2.&nbsp;Original: 1961; Cover: 1963</h3>
-
-        <div class="audio-players">
-            
-        <div class="audio-player">
-            <label>Clip:</label>
-            <audio controls>
-                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/47959cfa55c1_81889_92817.mp3" type="audio/mpeg">
-                Your browser does not support the audio element.
-            </audio>
-        </div>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">The Beatles (Original: The Top Notes)</p>
+                <p class="answer">Soft Cell (Original: Gloria Jones)</p>
             </div>
         </div>
         
@@ -284,30 +261,30 @@ footer {
                 Show Notes from Brenton
             </button>
             <div class="spoiler-content hidden">
-                <p class="notes">There were lots of other covers after the Beatles version (like Salt &#x27;n&#x27; Peppa?!)</p>
+                <p class="notes">Marilyn Manson also covered (in 2001)</p>
             </div>
         </div>
         <div class="feedback-section">
-            <label for="feedback-2">Feedback:</label>
+            <label for="feedback-1">Feedback:</label>
             <input type="text"
-                   id="feedback-2"
+                   id="feedback-1"
                    class="feedback-input"
                    placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(2, 'Twist and shout')">
+            <button class="feedback-submit" onclick="submitFeedback(1, 'Tainted love')">
                 Submit
             </button>
         </div>
     </div>
 
-    <div class="question" data-question-number="3" data-question-title="Man who sold the world">
-        <h3>3.&nbsp;Original: 1970; Cover: 1995</h3>
+    <div class="question" data-question-number="2" data-question-title="Feel the noize">
+        <h3>2.&nbsp;Original: 1973; Cover: 1983</h3>
 
         <div class="audio-players">
             
         <div class="audio-player">
             <label>Clip:</label>
             <audio controls>
-                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/0a452fb995a2_51241_58769.mp3" type="audio/mpeg">
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/5393bce9f0c8_91933_108059.mp3" type="audio/mpeg">
                 Your browser does not support the audio element.
             </audio>
         </div>
@@ -318,7 +295,42 @@ footer {
                 Show Answer
             </button>
             <div class="spoiler-content hidden">
-                <p class="answer">Nirvana (Original: David Bowie)</p>
+                <p class="answer">Quiet Riot (Original: Slade)</p>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-2">Feedback:</label>
+            <input type="text"
+                   id="feedback-2"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(2, 'Feel the noize')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="3" data-question-title="One">
+        <h3>3.&nbsp;Original: 1968; Cover: 1968</h3>
+
+        <div class="audio-players">
+            
+        <div class="audio-player">
+            <label>Clip:</label>
+            <audio controls>
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/f97c5d29941b_23661_38996.mp3" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Three Dog Night (Original: Harry Nillsson)</p>
             </div>
         </div>
         
@@ -328,21 +340,21 @@ footer {
                    id="feedback-3"
                    class="feedback-input"
                    placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(3, 'Man who sold the world')">
+            <button class="feedback-submit" onclick="submitFeedback(3, 'One')">
                 Submit
             </button>
         </div>
     </div>
 
-    <div class="question" data-question-number="4" data-question-title="torn">
-        <h3>4.&nbsp;Original: 1995; Cover: 1997</h3>
+    <div class="question" data-question-number="4" data-question-title="Why can&#x27;t we be friends">
+        <h3>4.&nbsp;Original: 1975; Cover: 1998</h3>
 
         <div class="audio-players">
             
         <div class="audio-player">
             <label>Clip:</label>
             <audio controls>
-                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/7d8acaac2172_99617_110564.mp3" type="audio/mpeg">
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/0f9339a7bedf_105746_116332.mp3" type="audio/mpeg">
                 Your browser does not support the audio element.
             </audio>
         </div>
@@ -353,7 +365,7 @@ footer {
                 Show Answer
             </button>
             <div class="spoiler-content hidden">
-                <p class="answer">Natalie Imbruglia (Original: Ednaswap)</p>
+                <p class="answer">Smashmouth (Original: War)</p>
             </div>
         </div>
         
@@ -363,21 +375,21 @@ footer {
                    id="feedback-4"
                    class="feedback-input"
                    placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(4, 'torn')">
+            <button class="feedback-submit" onclick="submitFeedback(4, 'Why can\'t we be friends')">
                 Submit
             </button>
         </div>
     </div>
 
-    <div class="question" data-question-number="5" data-question-title="Bobby McGee">
-        <h3>5.&nbsp;Original: 1970; Cover: 1971</h3>
+    <div class="question" data-question-number="5" data-question-title="Ring of fire">
+        <h3>5.&nbsp;Original: 1962; Cover: 1963</h3>
 
         <div class="audio-players">
             
         <div class="audio-player">
             <label>Clip:</label>
             <audio controls>
-                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/14bddb19e3d4_173295_179865.mp3" type="audio/mpeg">
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/9fd82922eee3_60206_72788.mp3" type="audio/mpeg">
                 Your browser does not support the audio element.
             </audio>
         </div>
@@ -388,25 +400,17 @@ footer {
                 Show Answer
             </button>
             <div class="spoiler-content hidden">
-                <p class="answer">Janis Joplin (Original: Gordon Lightfoot)</p>
+                <p class="answer">Johnny Cash (Original: Anita Carter)</p>
             </div>
         </div>
         
-        <div class="notes-section">
-            <button class="spoiler-toggle notes-toggle" onclick="toggleSpoiler(this)">
-                Show Notes from Brenton
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="notes">I&#x27;m a little worried about the definition of &#x27;original&#x27; here. Kris Kristofferson wrote it, then Gordon lightfoot released a version in 1970. Then Kris and Janis BOTH released a version in 1971. Gordon is &quot;original&quot; if you go by first released, but it *feels* like Kris&#x27; should be the &#x27;original&#x27; because he wrote it.</p>
-            </div>
-        </div>
         <div class="feedback-section">
             <label for="feedback-5">Feedback:</label>
             <input type="text"
                    id="feedback-5"
                    class="feedback-input"
                    placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(5, 'Bobby McGee')">
+            <button class="feedback-submit" onclick="submitFeedback(5, 'Ring of fire')">
                 Submit
             </button>
         </div>
@@ -455,8 +459,557 @@ footer {
         </div>
     </div>
 
-    <div class="question" data-question-number="7" data-question-title="The loco-motion">
-        <h3>7.&nbsp;Original: 1962; Cover: 1987</h3>
+    <div class="question" data-question-number="7" data-question-title="Watchtower">
+        <h3>7.&nbsp;Original: 1967; Cover: 1968</h3>
+
+        <div class="audio-players">
+            
+        <div class="audio-player">
+            <label>Clip:</label>
+            <audio controls>
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/2275d0f0b4b5_96703_104484.mp3" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Jimi Hendrix (Original: Bob Dylan)</p>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-7">Feedback:</label>
+            <input type="text"
+                   id="feedback-7"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(7, 'Watchtower')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="8" data-question-title="Mony mony">
+        <h3>8.&nbsp;Original: 1968; Cover: 1981</h3>
+
+        <div class="audio-players">
+            
+        <div class="audio-player">
+            <label>Clip:</label>
+            <audio controls>
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/2c5d5ebbd0ad_13052_16352.mp3" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Billy Idol (Original: Tommy James &amp; The Shondells)</p>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-8">Feedback:</label>
+            <input type="text"
+                   id="feedback-8"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(8, 'Mony mony')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="9" data-question-title="Respect">
+        <h3>9.&nbsp;Original: 1965; Cover: 1967</h3>
+
+        <div class="audio-players">
+            
+        <div class="audio-player">
+            <label>Clip:</label>
+            <audio controls>
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/adb00236071c_59157_61515.mp3" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Aretha Franklin (Original: Otis Redding)</p>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-9">Feedback:</label>
+            <input type="text"
+                   id="feedback-9"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(9, 'Respect')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="10" data-question-title="I think we&#x27;re alone now">
+        <h3>10.&nbsp;Original: 1967; Cover: 1987</h3>
+
+        <div class="audio-players">
+            
+        <div class="audio-player">
+            <label>Clip:</label>
+            <audio controls>
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/ceafa66b2d15_22345_37573.mp3" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Tiffany (Original: Tommy James &amp; The Shondells)</p>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-10">Feedback:</label>
+            <input type="text"
+                   id="feedback-10"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(10, 'I think we\'re alone now')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="11" data-question-title="knockin on heavens door">
+        <h3>11.&nbsp;Original: 1973; Cover: 1987</h3>
+
+        <div class="audio-players">
+            
+        <div class="audio-player">
+            <label>Clip:</label>
+            <audio controls>
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/cb35735fa59f_84280_95451.mp3" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Guns &#x27;n&#x27; Roses (Original: Bob Dylan)</p>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-11">Feedback:</label>
+            <input type="text"
+                   id="feedback-11"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(11, 'knockin on heavens door')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="12" data-question-title="Some kind of wonderful">
+        <h3>12.&nbsp;Original: 1967; Cover: 1974</h3>
+
+        <div class="audio-players">
+            
+        <div class="audio-player">
+            <label>Potential Clip 1:</label>
+            <audio controls>
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/f8a86e08e2a7_205_8167.mp3" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+
+        <div class="audio-player">
+            <label>Potential Clip 2:</label>
+            <audio controls>
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/f8a86e08e2a7_36775_46380.mp3" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Grand Funk Railrod (Original: Soul Brothers Six)</p>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-12">Feedback:</label>
+            <input type="text"
+                   id="feedback-12"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(12, 'Some kind of wonderful')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="13" data-question-title="Red red wine">
+        <h3>13.&nbsp;Original: 1967; Cover: 1983</h3>
+
+        <div class="audio-players">
+            
+        <div class="audio-player">
+            <label>Clip:</label>
+            <audio controls>
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/2246c57db917_132165_159544.mp3" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">UB40 (Original: Neil Diamond)</p>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-13">Feedback:</label>
+            <input type="text"
+                   id="feedback-13"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(13, 'Red red wine')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="14" data-question-title="Killing me softly">
+        <h3>14.&nbsp;Original: 1972; Cover: 1996</h3>
+
+        <div class="audio-players">
+            
+        <div class="audio-player">
+            <label>Clip:</label>
+            <audio controls>
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/8595041f7ab1_82471_101893.mp3" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Fugees (Original: Lori Lieberman)</p>
+            </div>
+        </div>
+        
+        <div class="notes-section">
+            <button class="spoiler-toggle notes-toggle" onclick="toggleSpoiler(this)">
+                Show Notes from Brenton
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="notes">Roberta Flack had a cover in 1973 that was bigger than the original and it&#x27;s pretty clear that the fugees were more inspired by that one</p>
+            </div>
+        </div>
+        <div class="feedback-section">
+            <label for="feedback-14">Feedback:</label>
+            <input type="text"
+                   id="feedback-14"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(14, 'Killing me softly')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="15" data-question-title="New York New York">
+        <h3>15.&nbsp;Original: 1977; Cover: 1979</h3>
+
+        <div class="audio-players">
+            
+        <div class="audio-player">
+            <label>Clip:</label>
+            <audio controls>
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/c53df944379b_139346_148735.mp3" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Frank Sinatra (Original: Liza Minelli)</p>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-15">Feedback:</label>
+            <input type="text"
+                   id="feedback-15"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(15, 'New York New York')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="16" data-question-title="torn">
+        <h3>16.&nbsp;Original: 1995; Cover: 1997</h3>
+
+        <div class="audio-players">
+            
+        <div class="audio-player">
+            <label>Clip:</label>
+            <audio controls>
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/7d8acaac2172_99617_110564.mp3" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Natalie Imbruglia (Original: Ednaswap)</p>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-16">Feedback:</label>
+            <input type="text"
+                   id="feedback-16"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(16, 'torn')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="17" data-question-title="Elvis something">
+        <h3>17.&nbsp;Original: 1953; Cover: 1956</h3>
+
+        <div class="audio-players">
+            
+        <div class="audio-player">
+            <label>Clip:</label>
+            <audio controls>
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/78e03c8534af_155402_164682.mp3" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Elvis (Original: Big Mama Thornton)</p>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-17">Feedback:</label>
+            <input type="text"
+                   id="feedback-17"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(17, 'Elvis something')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="18" data-question-title="Black magic woman">
+        <h3>18.&nbsp;Original: 1968; Cover: 1970</h3>
+
+        <div class="audio-players">
+            
+        <div class="audio-player">
+            <label>Clip:</label>
+            <audio controls>
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/dd0428b5e4b7_102726_112452.mp3" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Santana (Original: Fleetwood Mac)</p>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-18">Feedback:</label>
+            <input type="text"
+                   id="feedback-18"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(18, 'Black magic woman')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="19" data-question-title="live and let die">
+        <h3>19.&nbsp;Original: 1973; Cover: 1991</h3>
+
+        <div class="audio-players">
+            
+        <div class="audio-player">
+            <label>Clip:</label>
+            <audio controls>
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/0b2e5d6ae886_46830_59458.mp3" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Guns &#x27;n&#x27; Roses (Original: Wings)</p>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-19">Feedback:</label>
+            <input type="text"
+                   id="feedback-19"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(19, 'live and let die')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="20" data-question-title="Love hurts">
+        <h3>20.&nbsp;Original: 1960; Cover: 1974</h3>
+
+        <div class="audio-players">
+            
+        <div class="audio-player">
+            <label>Clip:</label>
+            <audio controls>
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/d4ce00042024_29057_42040.mp3" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Nazareth (Original: Everly Brothers)</p>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-20">Feedback:</label>
+            <input type="text"
+                   id="feedback-20"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(20, 'Love hurts')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="21" data-question-title="Twist and shout">
+        <h3>21.&nbsp;Original: 1961; Cover: 1963</h3>
+
+        <div class="audio-players">
+            
+        <div class="audio-player">
+            <label>Clip:</label>
+            <audio controls>
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/47959cfa55c1_81889_92817.mp3" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">The Beatles (Original: The Top Notes)</p>
+            </div>
+        </div>
+        
+        <div class="notes-section">
+            <button class="spoiler-toggle notes-toggle" onclick="toggleSpoiler(this)">
+                Show Notes from Brenton
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="notes">There were lots of other covers after the Beatles version (like Salt &#x27;n&#x27; Peppa?!)</p>
+            </div>
+        </div>
+        <div class="feedback-section">
+            <label for="feedback-21">Feedback:</label>
+            <input type="text"
+                   id="feedback-21"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(21, 'Twist and shout')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="22" data-question-title="The loco-motion">
+        <h3>22.&nbsp;Original: 1962; Cover: 1987</h3>
 
         <div class="audio-players">
             
@@ -487,26 +1040,26 @@ footer {
             </div>
         </div>
         <div class="feedback-section">
-            <label for="feedback-7">Feedback:</label>
+            <label for="feedback-22">Feedback:</label>
             <input type="text"
-                   id="feedback-7"
+                   id="feedback-22"
                    class="feedback-input"
                    placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(7, 'The loco-motion')">
+            <button class="feedback-submit" onclick="submitFeedback(22, 'The loco-motion')">
                 Submit
             </button>
         </div>
     </div>
 
-    <div class="question" data-question-number="8" data-question-title="live and let die">
-        <h3>8.&nbsp;Original: 1973; Cover: 1991</h3>
+    <div class="question" data-question-number="23" data-question-title="Downtown train">
+        <h3>23.&nbsp;Original: 1985; Cover: 1989</h3>
 
         <div class="audio-players">
             
         <div class="audio-player">
             <label>Clip:</label>
             <audio controls>
-                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/0b2e5d6ae886_46830_59458.mp3" type="audio/mpeg">
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/fb28f94c539d_31171_72215.mp3" type="audio/mpeg">
                 Your browser does not support the audio element.
             </audio>
         </div>
@@ -517,31 +1070,39 @@ footer {
                 Show Answer
             </button>
             <div class="spoiler-content hidden">
-                <p class="answer">Guns &#x27;n&#x27; Roses (Original: Wings)</p>
+                <p class="answer">Rod Stewart (Original: Tom Waits)</p>
             </div>
         </div>
         
+        <div class="notes-section">
+            <button class="spoiler-toggle notes-toggle" onclick="toggleSpoiler(this)">
+                Show Notes from Brenton
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="notes">I don&#x27;t know how to gauge popularity here because I know the Tom Waits version so much better than the Rod Stewart. Is Rod&#x27;s a well-known cover? There have also been a few other covers of it, so i&#x27;m leaning toward not using this</p>
+            </div>
+        </div>
         <div class="feedback-section">
-            <label for="feedback-8">Feedback:</label>
+            <label for="feedback-23">Feedback:</label>
             <input type="text"
-                   id="feedback-8"
+                   id="feedback-23"
                    class="feedback-input"
                    placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(8, 'live and let die')">
+            <button class="feedback-submit" onclick="submitFeedback(23, 'Downtown train')">
                 Submit
             </button>
         </div>
     </div>
 
-    <div class="question" data-question-number="9" data-question-title="Ring of fire">
-        <h3>9.&nbsp;Original: 1962; Cover: 1963</h3>
+    <div class="question" data-question-number="24" data-question-title="Bobby McGee">
+        <h3>24.&nbsp;Original: 1970; Cover: 1971</h3>
 
         <div class="audio-players">
             
         <div class="audio-player">
             <label>Clip:</label>
             <audio controls>
-                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/9fd82922eee3_60206_72788.mp3" type="audio/mpeg">
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/14bddb19e3d4_173295_179865.mp3" type="audio/mpeg">
                 Your browser does not support the audio element.
             </audio>
         </div>
@@ -552,31 +1113,39 @@ footer {
                 Show Answer
             </button>
             <div class="spoiler-content hidden">
-                <p class="answer">Johnny Cash (Original: Anita Carter)</p>
+                <p class="answer">Janis Joplin (Original: Gordon Lightfoot)</p>
             </div>
         </div>
         
+        <div class="notes-section">
+            <button class="spoiler-toggle notes-toggle" onclick="toggleSpoiler(this)">
+                Show Notes from Brenton
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="notes">I&#x27;m a little worried about the definition of &#x27;original&#x27; here. Kris Kristofferson wrote it, then Gordon lightfoot released a version in 1970. Then Kris and Janis BOTH released a version in 1971. Gordon is &quot;original&quot; if you go by first released, but is the 1971 cover janis or kris?</p>
+            </div>
+        </div>
         <div class="feedback-section">
-            <label for="feedback-9">Feedback:</label>
+            <label for="feedback-24">Feedback:</label>
             <input type="text"
-                   id="feedback-9"
+                   id="feedback-24"
                    class="feedback-input"
                    placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(9, 'Ring of fire')">
+            <button class="feedback-submit" onclick="submitFeedback(24, 'Bobby McGee')">
                 Submit
             </button>
         </div>
     </div>
 
-    <div class="question" data-question-number="10" data-question-title="knockin on heavens door">
-        <h3>10.&nbsp;Original: 1973; Cover: 1987</h3>
+    <div class="question" data-question-number="25" data-question-title="Man who sold the world">
+        <h3>25.&nbsp;Original: 1970; Cover: 1995</h3>
 
         <div class="audio-players">
             
         <div class="audio-player">
             <label>Clip:</label>
             <audio controls>
-                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/cb35735fa59f_84280_95451.mp3" type="audio/mpeg">
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/0a452fb995a2_51241_58769.mp3" type="audio/mpeg">
                 Your browser does not support the audio element.
             </audio>
         </div>
@@ -587,129 +1156,24 @@ footer {
                 Show Answer
             </button>
             <div class="spoiler-content hidden">
-                <p class="answer">Guns &#x27;n&#x27; Roses (Original: Bob Dylan)</p>
+                <p class="answer">Nirvana (Original: David Bowie)</p>
             </div>
         </div>
         
         <div class="feedback-section">
-            <label for="feedback-10">Feedback:</label>
+            <label for="feedback-25">Feedback:</label>
             <input type="text"
-                   id="feedback-10"
+                   id="feedback-25"
                    class="feedback-input"
                    placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(10, 'knockin on heavens door')">
+            <button class="feedback-submit" onclick="submitFeedback(25, 'Man who sold the world')">
                 Submit
             </button>
         </div>
     </div>
 
-    <div class="question" data-question-number="11" data-question-title="Red red wine">
-        <h3>11.&nbsp;Original: 1967; Cover: 1983</h3>
-
-        <div class="audio-players">
-            
-        <div class="audio-player">
-            <label>Clip:</label>
-            <audio controls>
-                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/2246c57db917_132165_159544.mp3" type="audio/mpeg">
-                Your browser does not support the audio element.
-            </audio>
-        </div>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">UB40 (Original: Neil Diamond)</p>
-            </div>
-        </div>
-        
-        <div class="feedback-section">
-            <label for="feedback-11">Feedback:</label>
-            <input type="text"
-                   id="feedback-11"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(11, 'Red red wine')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="12" data-question-title="I think we&#x27;re alone now">
-        <h3>12.&nbsp;Original: 1967; Cover: 1987</h3>
-
-        <div class="audio-players">
-            
-        <div class="audio-player">
-            <label>Clip:</label>
-            <audio controls>
-                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/ceafa66b2d15_22345_37573.mp3" type="audio/mpeg">
-                Your browser does not support the audio element.
-            </audio>
-        </div>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Tiffany (Original: Tommy James &amp; The Shondells)</p>
-            </div>
-        </div>
-        
-        <div class="feedback-section">
-            <label for="feedback-12">Feedback:</label>
-            <input type="text"
-                   id="feedback-12"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(12, 'I think we\'re alone now')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="13" data-question-title="One">
-        <h3>13.&nbsp;Original: 1968; Cover: 1968</h3>
-
-        <div class="audio-players">
-            
-        <div class="audio-player">
-            <label>Clip:</label>
-            <audio controls>
-                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/f97c5d29941b_23661_38996.mp3" type="audio/mpeg">
-                Your browser does not support the audio element.
-            </audio>
-        </div>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Three Dog Night (Original: Harry Nillsson)</p>
-            </div>
-        </div>
-        
-        <div class="feedback-section">
-            <label for="feedback-13">Feedback:</label>
-            <input type="text"
-                   id="feedback-13"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(13, 'One')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="14" data-question-title="with a little help from my friends">
-        <h3>14.&nbsp;Original: 1967; Cover: 1968</h3>
+    <div class="question" data-question-number="26" data-question-title="with a little help from my friends">
+        <h3>26.&nbsp;Original: 1967; Cover: 1968</h3>
 
         <div class="audio-players">
             
@@ -748,218 +1212,19 @@ footer {
             </div>
         </div>
         <div class="feedback-section">
-            <label for="feedback-14">Feedback:</label>
+            <label for="feedback-26">Feedback:</label>
             <input type="text"
-                   id="feedback-14"
+                   id="feedback-26"
                    class="feedback-input"
                    placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(14, 'with a little help from my friends')">
+            <button class="feedback-submit" onclick="submitFeedback(26, 'with a little help from my friends')">
                 Submit
             </button>
         </div>
     </div>
 
-    <div class="question" data-question-number="15" data-question-title="Tainted love">
-        <h3>15.&nbsp;Original: 1965; Cover: 1981</h3>
-
-        <div class="audio-players">
-            
-        <div class="audio-player">
-            <label>Potential Clip 1:</label>
-            <audio controls>
-                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/d84fccf97178_3384_9696.mp3" type="audio/mpeg">
-                Your browser does not support the audio element.
-            </audio>
-        </div>
-
-        <div class="audio-player">
-            <label>Potential Clip 2:</label>
-            <audio controls>
-                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/d84fccf97178_89812_93937.mp3" type="audio/mpeg">
-                Your browser does not support the audio element.
-            </audio>
-        </div>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Soft Cell (Original: Gloria Jones)</p>
-            </div>
-        </div>
-        
-        <div class="notes-section">
-            <button class="spoiler-toggle notes-toggle" onclick="toggleSpoiler(this)">
-                Show Notes from Brenton
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="notes">Marilyn Manson also covered (in 2001)</p>
-            </div>
-        </div>
-        <div class="feedback-section">
-            <label for="feedback-15">Feedback:</label>
-            <input type="text"
-                   id="feedback-15"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(15, 'Tainted love')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="16" data-question-title="Feel the noize">
-        <h3>16.&nbsp;Original: 1973; Cover: 1983</h3>
-
-        <div class="audio-players">
-            
-        <div class="audio-player">
-            <label>Clip:</label>
-            <audio controls>
-                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/5393bce9f0c8_91933_108059.mp3" type="audio/mpeg">
-                Your browser does not support the audio element.
-            </audio>
-        </div>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Quiet Riot (Original: Slade)</p>
-            </div>
-        </div>
-        
-        <div class="feedback-section">
-            <label for="feedback-16">Feedback:</label>
-            <input type="text"
-                   id="feedback-16"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(16, 'Feel the noize')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="17" data-question-title="Some kind of wonderful">
-        <h3>17.&nbsp;Original: 1967; Cover: 1974</h3>
-
-        <div class="audio-players">
-            
-        <div class="audio-player">
-            <label>Potential Clip 1:</label>
-            <audio controls>
-                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/f8a86e08e2a7_205_8167.mp3" type="audio/mpeg">
-                Your browser does not support the audio element.
-            </audio>
-        </div>
-
-        <div class="audio-player">
-            <label>Potential Clip 2:</label>
-            <audio controls>
-                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/f8a86e08e2a7_36775_46380.mp3" type="audio/mpeg">
-                Your browser does not support the audio element.
-            </audio>
-        </div>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Grand Funk Railrod (Original: Soul Brothers Six)</p>
-            </div>
-        </div>
-        
-        <div class="feedback-section">
-            <label for="feedback-17">Feedback:</label>
-            <input type="text"
-                   id="feedback-17"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(17, 'Some kind of wonderful')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="18" data-question-title="Respect">
-        <h3>18.&nbsp;Original: 1965; Cover: 1967</h3>
-
-        <div class="audio-players">
-            
-        <div class="audio-player">
-            <label>Clip:</label>
-            <audio controls>
-                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/adb00236071c_59157_61515.mp3" type="audio/mpeg">
-                Your browser does not support the audio element.
-            </audio>
-        </div>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Aretha Franklin (Original: Otis Redding)</p>
-            </div>
-        </div>
-        
-        <div class="feedback-section">
-            <label for="feedback-18">Feedback:</label>
-            <input type="text"
-                   id="feedback-18"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(18, 'Respect')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="19" data-question-title="Watchtower">
-        <h3>19.&nbsp;Original: 1967; Cover: 1968</h3>
-
-        <div class="audio-players">
-            
-        <div class="audio-player">
-            <label>Clip:</label>
-            <audio controls>
-                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/2275d0f0b4b5_96703_104484.mp3" type="audio/mpeg">
-                Your browser does not support the audio element.
-            </audio>
-        </div>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Jimi Hendrix (Original: Bob Dylan)</p>
-            </div>
-        </div>
-        
-        <div class="feedback-section">
-            <label for="feedback-19">Feedback:</label>
-            <input type="text"
-                   id="feedback-19"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(19, 'Watchtower')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="20" data-question-title="Blinded by the light">
-        <h3>20.&nbsp;Original: 1973; Cover: 1976</h3>
+    <div class="question" data-question-number="27" data-question-title="Blinded by the light">
+        <h3>27.&nbsp;Original: 1973; Cover: 1976</h3>
 
         <div class="audio-players">
             
@@ -982,273 +1247,12 @@ footer {
         </div>
         
         <div class="feedback-section">
-            <label for="feedback-20">Feedback:</label>
-            <input type="text"
-                   id="feedback-20"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(20, 'Blinded by the light')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="21" data-question-title="Killing me softly">
-        <h3>21.&nbsp;Original: 1972; Cover: 1996</h3>
-
-        <div class="audio-players">
-            
-        <div class="audio-player">
-            <label>Clip:</label>
-            <audio controls>
-                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/8595041f7ab1_82471_101893.mp3" type="audio/mpeg">
-                Your browser does not support the audio element.
-            </audio>
-        </div>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Fugees (Original: Lori Lieberman)</p>
-            </div>
-        </div>
-        
-        <div class="notes-section">
-            <button class="spoiler-toggle notes-toggle" onclick="toggleSpoiler(this)">
-                Show Notes from Brenton
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="notes">Roberta Flack had a cover in 1973 that was bigger than the original and it&#x27;s pretty clear that the fugees were more inspired by that one</p>
-            </div>
-        </div>
-        <div class="feedback-section">
-            <label for="feedback-21">Feedback:</label>
-            <input type="text"
-                   id="feedback-21"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(21, 'Killing me softly')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="22" data-question-title="Black magic woman">
-        <h3>22.&nbsp;Original: 1968; Cover: 1970</h3>
-
-        <div class="audio-players">
-            
-        <div class="audio-player">
-            <label>Clip:</label>
-            <audio controls>
-                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/dd0428b5e4b7_102726_112452.mp3" type="audio/mpeg">
-                Your browser does not support the audio element.
-            </audio>
-        </div>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Santana (Original: Fleetwood Mac)</p>
-            </div>
-        </div>
-        
-        <div class="feedback-section">
-            <label for="feedback-22">Feedback:</label>
-            <input type="text"
-                   id="feedback-22"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(22, 'Black magic woman')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="23" data-question-title="Why can&#x27;t we be friends">
-        <h3>23.&nbsp;Original: 1975; Cover: 1998</h3>
-
-        <div class="audio-players">
-            
-        <div class="audio-player">
-            <label>Clip:</label>
-            <audio controls>
-                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/0f9339a7bedf_105746_116332.mp3" type="audio/mpeg">
-                Your browser does not support the audio element.
-            </audio>
-        </div>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Smashmouth (Original: War)</p>
-            </div>
-        </div>
-        
-        <div class="feedback-section">
-            <label for="feedback-23">Feedback:</label>
-            <input type="text"
-                   id="feedback-23"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(23, 'Why can\'t we be friends')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="24" data-question-title="New York New York">
-        <h3>24.&nbsp;Original: 1977; Cover: 1979</h3>
-
-        <div class="audio-players">
-            
-        <div class="audio-player">
-            <label>Clip:</label>
-            <audio controls>
-                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/c53df944379b_139346_145824.mp3" type="audio/mpeg">
-                Your browser does not support the audio element.
-            </audio>
-        </div>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Frank Sinatra (Original: Liza Minelli)</p>
-            </div>
-        </div>
-        
-        <div class="feedback-section">
-            <label for="feedback-24">Feedback:</label>
-            <input type="text"
-                   id="feedback-24"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(24, 'New York New York')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="25" data-question-title="Love hurts">
-        <h3>25.&nbsp;Original: 1960; Cover: 1974</h3>
-
-        <div class="audio-players">
-            
-        <div class="audio-player">
-            <label>Clip:</label>
-            <audio controls>
-                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/d4ce00042024_29057_42040.mp3" type="audio/mpeg">
-                Your browser does not support the audio element.
-            </audio>
-        </div>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Nazareth (Original: Everly Brothers)</p>
-            </div>
-        </div>
-        
-        <div class="feedback-section">
-            <label for="feedback-25">Feedback:</label>
-            <input type="text"
-                   id="feedback-25"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(25, 'Love hurts')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="26" data-question-title="Downtown train">
-        <h3>26.&nbsp;Original: 1985; Cover: 1989</h3>
-
-        <div class="audio-players">
-            
-        <div class="audio-player">
-            <label>Clip:</label>
-            <audio controls>
-                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/fb28f94c539d_31171_72215.mp3" type="audio/mpeg">
-                Your browser does not support the audio element.
-            </audio>
-        </div>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Rod Stewart (Original: Tom Waits)</p>
-            </div>
-        </div>
-        
-        <div class="notes-section">
-            <button class="spoiler-toggle notes-toggle" onclick="toggleSpoiler(this)">
-                Show Notes from Brenton
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="notes">I don&#x27;t know how to gauge popularity here because I know the Tom Waits version so much better than the Rod Stewart. Is Rod&#x27;s a well-known cover? There have also been a few other covers of it, so i&#x27;m leaning toward not using this</p>
-            </div>
-        </div>
-        <div class="feedback-section">
-            <label for="feedback-26">Feedback:</label>
-            <input type="text"
-                   id="feedback-26"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(26, 'Downtown train')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="27" data-question-title="Elvis something">
-        <h3>27.&nbsp;Original: 1953; Cover: 1956</h3>
-
-        <div class="audio-players">
-            
-        <div class="audio-player">
-            <label>Clip:</label>
-            <audio controls>
-                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/78e03c8534af_155402_164682.mp3" type="audio/mpeg">
-                Your browser does not support the audio element.
-            </audio>
-        </div>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Elvis (Original: Big Mama Thornton)</p>
-            </div>
-        </div>
-        
-        <div class="feedback-section">
             <label for="feedback-27">Feedback:</label>
             <input type="text"
                    id="feedback-27"
                    class="feedback-input"
                    placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(27, 'Elvis something')">
+            <button class="feedback-submit" onclick="submitFeedback(27, 'Blinded by the light')">
                 Submit
             </button>
         </div>

@@ -7,59 +7,60 @@
   },
   "audio_base_url": "",
   "instructions": {
-    "instructions_text": "Each question below contains has a snippet from a song that went on to have a well-known cover version by a different artist. We want the name of the artist that release the cover version, NOT the artist performing in the recorded sample.\n\nSome songs have inspired multiple well-known covers, so pay attention to the *year* of the cover as well.\n\nFor example, if the question states 'Original: 1974; Cover: 1992.' and had this clip:",
+    "instructions_text": "Each question below contains has a snippet from a song that went on to have a well-known cover version by a different artist. We want the name of the *artist that released the cover version*, _not_ the artist performing the recorded sample.\nNote that some songs have inspired multiple well-known covers, so pay attention to the *year* of the cover given in the question which sould narrow it down to a single cover.\n\nFor example, if the question states 'Original: 1974; Cover: 1992.' and had this clip:",
     "sample_audiofile": "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/35a04d7d5f77_42707_45942.mp3",
-    "post_sample_text": "You should listen to that sample and figure out that it is the song _I Will Always Love You_ (originally released by Dolly Parton in 1974). In 1992, it was covered in by Whitney Houston. So the correct answer should be \"Whitney Houston\".\n\n- I need to whittle this down to a smaller set, so I've got a feedback box for each question. Let me know if the snippet i selected wasnt good (too hard/too easy), the cover wasn't sufficiently famous that you think people would know it, or whether if any of them are particulary interesting and that i should be sure to include it.\n\n- For the purposes of this test, some songs have multiple snippets that I'm testing out but the real version will just have one. If you have opinions on which candidates to use, let me know in the feedback.\n\n- I've tried to avoid picking song clips that include the name of the song, but I'm not sure if that's important seeing that the answer is the *artist* and not the song. In some cases it'd make it too easy, but I'm not sure if I've made things needlessly hard by imposing that rule"
+    "post_sample_text": "You should listen to that sample and figure out that it is the song _I Will Always Love You_ (originally released by Dolly Parton in 1974). In 1992, it was covered in by Whitney Houston. So the correct answer should be \"Whitney Houston\".\n\n\nOther caveats/comments:\n* I need to whittle this down to a smaller set, so I've got a feedback box for each question. Let me know if the snippet i selected wasnt good (too hard/too easy), the cover wasn't sufficiently famous that you think people would know it, or whether if any of them are particulary interesting and that i should be sure to include it.\n* For the purposes of this test, some songs have multiple snippets that I'm testing out but the real version will just have one. If you have opinions on which candidates to use, let me know in the feedback.\n* I've tried to avoid picking song clips that include the name of the song, but I'm not sure if that's important seeing that the answer is the *artist* and not the song. In some cases it'd make it too easy, but I'm not sure if I've made things needlessly hard by imposing that rule\n* There are some duplicate artists in the originals and for answers. I'll make sure to avoid that in the final question set"
   },
   "questions": [
     {
-      "question_title": "Mony mony",
-      "question_text": "Original: 1968; Cover: 1981",
+      "question_title": "Tainted love",
+      "question_text": "Original: 1965; Cover: 1981",
       "audiofiles": [
-        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/2c5d5ebbd0ad_13052_16352.mp3"
+        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/d84fccf97178_3384_9696.mp3",
+        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/d84fccf97178_89812_93937.mp3"
       ],
-      "answer_text": "Billy Idol (Original: Tommy James & The Shondells)",
-      "notes": "",
+      "answer_text": "Soft Cell (Original: Gloria Jones)",
+      "notes": "Marilyn Manson also covered (in 2001)",
       "question_number": 1
     },
     {
-      "question_title": "Twist and shout",
-      "question_text": "Original: 1961; Cover: 1963",
+      "question_title": "Feel the noize",
+      "question_text": "Original: 1973; Cover: 1983",
       "audiofiles": [
-        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/47959cfa55c1_81889_92817.mp3"
+        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/5393bce9f0c8_91933_108059.mp3"
       ],
-      "answer_text": "The Beatles (Original: The Top Notes)",
-      "notes": "There were lots of other covers after the Beatles version (like Salt 'n' Peppa?!)",
+      "answer_text": "Quiet Riot (Original: Slade)",
+      "notes": "",
       "question_number": 2
     },
     {
-      "question_title": "Man who sold the world",
-      "question_text": "Original: 1970; Cover: 1995",
+      "question_title": "One",
+      "question_text": "Original: 1968; Cover: 1968",
       "audiofiles": [
-        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/0a452fb995a2_51241_58769.mp3"
+        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/f97c5d29941b_23661_38996.mp3"
       ],
-      "answer_text": "Nirvana (Original: David Bowie)",
+      "answer_text": "Three Dog Night (Original: Harry Nillsson)",
       "notes": "",
       "question_number": 3
     },
     {
-      "question_title": "torn",
-      "question_text": "Original: 1995; Cover: 1997",
+      "question_title": "Why can't we be friends",
+      "question_text": "Original: 1975; Cover: 1998",
       "audiofiles": [
-        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/7d8acaac2172_99617_110564.mp3"
+        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/0f9339a7bedf_105746_116332.mp3"
       ],
-      "answer_text": "Natalie Imbruglia (Original: Ednaswap)",
+      "answer_text": "Smashmouth (Original: War)",
       "notes": "",
       "question_number": 4
     },
     {
-      "question_title": "Bobby McGee",
-      "question_text": "Original: 1970; Cover: 1971",
+      "question_title": "Ring of fire",
+      "question_text": "Original: 1962; Cover: 1963",
       "audiofiles": [
-        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/14bddb19e3d4_173295_179865.mp3"
+        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/9fd82922eee3_60206_72788.mp3"
       ],
-      "answer_text": "Janis Joplin (Original: Gordon Lightfoot)",
-      "notes": "I'm a little worried about the definition of 'original' here. Kris Kristofferson wrote it, then Gordon lightfoot released a version in 1970. Then Kris and Janis BOTH released a version in 1971. Gordon is \"original\" if you go by first released, but it *feels* like Kris' should be the 'original' because he wrote it.",
+      "answer_text": "Johnny Cash (Original: Anita Carter)",
+      "notes": "",
       "question_number": 5
     },
     {
@@ -73,54 +74,34 @@
       "question_number": 6
     },
     {
-      "question_title": "The loco-motion",
-      "question_text": "Original: 1962; Cover: 1987",
+      "question_title": "Watchtower",
+      "question_text": "Original: 1967; Cover: 1968",
       "audiofiles": [
-        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/29702f8e652b_8453_13847.mp3"
+        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/2275d0f0b4b5_96703_104484.mp3"
       ],
-      "answer_text": "Kyline Minogue (Original: Little Eva)",
-      "notes": "Grand Funk Railroad also covered this in the 1970s",
+      "answer_text": "Jimi Hendrix (Original: Bob Dylan)",
+      "notes": "",
       "question_number": 7
     },
     {
-      "question_title": "live and let die",
-      "question_text": "Original: 1973; Cover: 1991",
+      "question_title": "Mony mony",
+      "question_text": "Original: 1968; Cover: 1981",
       "audiofiles": [
-        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/0b2e5d6ae886_46830_59458.mp3"
+        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/2c5d5ebbd0ad_13052_16352.mp3"
       ],
-      "answer_text": "Guns 'n' Roses (Original: Wings)",
+      "answer_text": "Billy Idol (Original: Tommy James & The Shondells)",
       "notes": "",
       "question_number": 8
     },
     {
-      "question_title": "Ring of fire",
-      "question_text": "Original: 1962; Cover: 1963",
+      "question_title": "Respect",
+      "question_text": "Original: 1965; Cover: 1967",
       "audiofiles": [
-        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/9fd82922eee3_60206_72788.mp3"
+        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/adb00236071c_59157_61515.mp3"
       ],
-      "answer_text": "Johnny Cash (Original: Anita Carter)",
+      "answer_text": "Aretha Franklin (Original: Otis Redding)",
       "notes": "",
       "question_number": 9
-    },
-    {
-      "question_title": "knockin on heavens door",
-      "question_text": "Original: 1973; Cover: 1987",
-      "audiofiles": [
-        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/cb35735fa59f_84280_95451.mp3"
-      ],
-      "answer_text": "Guns 'n' Roses (Original: Bob Dylan)",
-      "notes": "",
-      "question_number": 10
-    },
-    {
-      "question_title": "Red red wine",
-      "question_text": "Original: 1967; Cover: 1983",
-      "audiofiles": [
-        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/2246c57db917_132165_159544.mp3"
-      ],
-      "answer_text": "UB40 (Original: Neil Diamond)",
-      "notes": "",
-      "question_number": 11
     },
     {
       "question_title": "I think we're alone now",
@@ -130,49 +111,17 @@
       ],
       "answer_text": "Tiffany (Original: Tommy James & The Shondells)",
       "notes": "",
-      "question_number": 12
+      "question_number": 10
     },
     {
-      "question_title": "One",
-      "question_text": "Original: 1968; Cover: 1968",
+      "question_title": "knockin on heavens door",
+      "question_text": "Original: 1973; Cover: 1987",
       "audiofiles": [
-        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/f97c5d29941b_23661_38996.mp3"
+        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/cb35735fa59f_84280_95451.mp3"
       ],
-      "answer_text": "Three Dog Night (Original: Harry Nillsson)",
+      "answer_text": "Guns 'n' Roses (Original: Bob Dylan)",
       "notes": "",
-      "question_number": 13
-    },
-    {
-      "question_title": "with a little help from my friends",
-      "question_text": "Original: 1967; Cover: 1968",
-      "audiofiles": [
-        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/61e3a3986ea8_127968_132045.mp3",
-        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/61e3a3986ea8_154394_162463.mp3"
-      ],
-      "answer_text": "Joe Cocker (Original: The Beatles)",
-      "notes": "Because this was that Beatles, there are a LOT of other covers but I think the year (and relative fame) of this version should narrow it down enough",
-      "question_number": 14
-    },
-    {
-      "question_title": "Tainted love",
-      "question_text": "Original: 1965; Cover: 1981",
-      "audiofiles": [
-        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/d84fccf97178_3384_9696.mp3",
-        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/d84fccf97178_89812_93937.mp3"
-      ],
-      "answer_text": "Soft Cell (Original: Gloria Jones)",
-      "notes": "Marilyn Manson also covered (in 2001)",
-      "question_number": 15
-    },
-    {
-      "question_title": "Feel the noize",
-      "question_text": "Original: 1973; Cover: 1983",
-      "audiofiles": [
-        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/5393bce9f0c8_91933_108059.mp3"
-      ],
-      "answer_text": "Quiet Riot (Original: Slade)",
-      "notes": "",
-      "question_number": 16
+      "question_number": 11
     },
     {
       "question_title": "Some kind of wonderful",
@@ -183,37 +132,17 @@
       ],
       "answer_text": "Grand Funk Railrod (Original: Soul Brothers Six)",
       "notes": "",
-      "question_number": 17
+      "question_number": 12
     },
     {
-      "question_title": "Respect",
-      "question_text": "Original: 1965; Cover: 1967",
+      "question_title": "Red red wine",
+      "question_text": "Original: 1967; Cover: 1983",
       "audiofiles": [
-        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/adb00236071c_59157_61515.mp3"
+        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/2246c57db917_132165_159544.mp3"
       ],
-      "answer_text": "Aretha Franklin (Original: Otis Redding)",
+      "answer_text": "UB40 (Original: Neil Diamond)",
       "notes": "",
-      "question_number": 18
-    },
-    {
-      "question_title": "Watchtower",
-      "question_text": "Original: 1967; Cover: 1968",
-      "audiofiles": [
-        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/2275d0f0b4b5_96703_104484.mp3"
-      ],
-      "answer_text": "Jimi Hendrix (Original: Bob Dylan)",
-      "notes": "",
-      "question_number": 19
-    },
-    {
-      "question_title": "Blinded by the light",
-      "question_text": "Original: 1973; Cover: 1976",
-      "audiofiles": [
-        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/325ba83a38fc_179336_187087.mp3"
-      ],
-      "answer_text": "Manfred Mann's Earth Band (Original: Bruce Springsteen)",
-      "notes": "",
-      "question_number": 20
+      "question_number": 13
     },
     {
       "question_title": "Killing me softly",
@@ -223,7 +152,37 @@
       ],
       "answer_text": "Fugees (Original: Lori Lieberman)",
       "notes": "Roberta Flack had a cover in 1973 that was bigger than the original and it's pretty clear that the fugees were more inspired by that one",
-      "question_number": 21
+      "question_number": 14
+    },
+    {
+      "question_title": "New York New York",
+      "question_text": "Original: 1977; Cover: 1979",
+      "audiofiles": [
+        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/c53df944379b_139346_148735.mp3"
+      ],
+      "answer_text": "Frank Sinatra (Original: Liza Minelli)",
+      "notes": "",
+      "question_number": 15
+    },
+    {
+      "question_title": "torn",
+      "question_text": "Original: 1995; Cover: 1997",
+      "audiofiles": [
+        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/7d8acaac2172_99617_110564.mp3"
+      ],
+      "answer_text": "Natalie Imbruglia (Original: Ednaswap)",
+      "notes": "",
+      "question_number": 16
+    },
+    {
+      "question_title": "Elvis something",
+      "question_text": "Original: 1953; Cover: 1956",
+      "audiofiles": [
+        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/78e03c8534af_155402_164682.mp3"
+      ],
+      "answer_text": "Elvis (Original: Big Mama Thornton)",
+      "notes": "",
+      "question_number": 17
     },
     {
       "question_title": "Black magic woman",
@@ -233,27 +192,17 @@
       ],
       "answer_text": "Santana (Original: Fleetwood Mac)",
       "notes": "",
-      "question_number": 22
+      "question_number": 18
     },
     {
-      "question_title": "Why can't we be friends",
-      "question_text": "Original: 1975; Cover: 1998",
+      "question_title": "live and let die",
+      "question_text": "Original: 1973; Cover: 1991",
       "audiofiles": [
-        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/0f9339a7bedf_105746_116332.mp3"
+        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/0b2e5d6ae886_46830_59458.mp3"
       ],
-      "answer_text": "Smashmouth (Original: War)",
+      "answer_text": "Guns 'n' Roses (Original: Wings)",
       "notes": "",
-      "question_number": 23
-    },
-    {
-      "question_title": "New York New York",
-      "question_text": "Original: 1977; Cover: 1979",
-      "audiofiles": [
-        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/c53df944379b_139346_145824.mp3"
-      ],
-      "answer_text": "Frank Sinatra (Original: Liza Minelli)",
-      "notes": "",
-      "question_number": 24
+      "question_number": 19
     },
     {
       "question_title": "Love hurts",
@@ -263,7 +212,27 @@
       ],
       "answer_text": "Nazareth (Original: Everly Brothers)",
       "notes": "",
-      "question_number": 25
+      "question_number": 20
+    },
+    {
+      "question_title": "Twist and shout",
+      "question_text": "Original: 1961; Cover: 1963",
+      "audiofiles": [
+        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/47959cfa55c1_81889_92817.mp3"
+      ],
+      "answer_text": "The Beatles (Original: The Top Notes)",
+      "notes": "There were lots of other covers after the Beatles version (like Salt 'n' Peppa?!)",
+      "question_number": 21
+    },
+    {
+      "question_title": "The loco-motion",
+      "question_text": "Original: 1962; Cover: 1987",
+      "audiofiles": [
+        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/29702f8e652b_8453_13847.mp3"
+      ],
+      "answer_text": "Kyline Minogue (Original: Little Eva)",
+      "notes": "Grand Funk Railroad also covered this in the 1970s",
+      "question_number": 22
     },
     {
       "question_title": "Downtown train",
@@ -273,15 +242,46 @@
       ],
       "answer_text": "Rod Stewart (Original: Tom Waits)",
       "notes": "I don't know how to gauge popularity here because I know the Tom Waits version so much better than the Rod Stewart. Is Rod's a well-known cover? There have also been a few other covers of it, so i'm leaning toward not using this",
+      "question_number": 23
+    },
+    {
+      "question_title": "Bobby McGee",
+      "question_text": "Original: 1970; Cover: 1971",
+      "audiofiles": [
+        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/14bddb19e3d4_173295_179865.mp3"
+      ],
+      "answer_text": "Janis Joplin (Original: Gordon Lightfoot)",
+      "notes": "I'm a little worried about the definition of 'original' here. Kris Kristofferson wrote it, then Gordon lightfoot released a version in 1970. Then Kris and Janis BOTH released a version in 1971. Gordon is \"original\" if you go by first released, but is the 1971 cover janis or kris?",
+      "question_number": 24
+    },
+    {
+      "question_title": "Man who sold the world",
+      "question_text": "Original: 1970; Cover: 1995",
+      "audiofiles": [
+        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/0a452fb995a2_51241_58769.mp3"
+      ],
+      "answer_text": "Nirvana (Original: David Bowie)",
+      "notes": "",
+      "question_number": 25
+    },
+    {
+      "question_title": "with a little help from my friends",
+      "question_text": "Original: 1967; Cover: 1968",
+      "audiofiles": [
+        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/61e3a3986ea8_127968_132045.mp3",
+        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/61e3a3986ea8_154394_162463.mp3"
+      ],
+      "answer_text": "Joe Cocker (Original: The Beatles)",
+      "notes": "Because this was that Beatles, there are a LOT of other covers but I think the year (and relative fame) of this version should narrow it down enough",
       "question_number": 26
     },
     {
-      "question_title": "Elvis something",
-      "question_text": "Original: 1953; Cover: 1956",
+      "question_title": "Blinded by the light",
+      "question_text": "Original: 1973; Cover: 1976",
       "audiofiles": [
-        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/78e03c8534af_155402_164682.mp3"
+        "/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/325ba83a38fc_179336_187087.mp3"
       ],
-      "answer_text": "Elvis (Original: Big Mama Thornton)",
+      "answer_text": "Manfred Mann's Earth Band (Original: Bruce Springsteen)",
       "notes": "",
       "question_number": 27
     }
