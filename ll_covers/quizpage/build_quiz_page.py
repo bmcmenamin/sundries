@@ -17,25 +17,11 @@ Examples:
 
 import argparse
 import json
-import re
 import sys
 from html import escape
 from pathlib import Path
 
-import markdown
-
-
-def preprocess_markdown(text: str) -> str:
-    """
-    Preprocess text for markdown rendering.
-
-    Ensures blank lines before list markers so they're properly recognized.
-    Standard Markdown requires a blank line before starting a list.
-    """
-    # Add blank line before lines starting with list markers (* or -)
-    # if not already preceded by a blank line
-    text = re.sub(r'([^\n])\n(\s*[\*\-]\s)', r'\1\n\n\2', text)
-    return text
+import mistune
 
 
 def validate_config(config: dict) -> list[str]:
@@ -128,7 +114,7 @@ def generate_instructions_html(instructions: dict, base_url: str) -> str:
     text = instructions.get("instructions_text", "")
     if text:
         # Render markdown to HTML (handles newlines, bold, italic, lists, etc.)
-        text_html = markdown.markdown(preprocess_markdown(text))
+        text_html = mistune.html(text)
         parts.append(f'<div class="instructions-text">{text_html}</div>')
 
     sample = instructions.get("sample_audiofile")
@@ -145,7 +131,7 @@ def generate_instructions_html(instructions: dict, base_url: str) -> str:
 
     post_text = instructions.get("post_sample_text", "")
     if post_text:
-        post_text_html = markdown.markdown(preprocess_markdown(post_text))
+        post_text_html = mistune.html(post_text)
         parts.append(f'<div class="post-sample-text">{post_text_html}</div>')
 
     return "\n".join(parts)
