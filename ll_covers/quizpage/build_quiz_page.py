@@ -148,7 +148,7 @@ def generate_question_html(question: dict, base_url: str) -> str:
         audio_html_parts = []
         for i, audiofile in enumerate(audiofiles, 1):
             audio_url = resolve_audio_path(audiofile, base_url)
-            label = f"Potential Clip {i}:" if len(audiofiles) > 1 else "Audio:"
+            label = f"Potential Clip {i}:" if len(audiofiles) > 1 else "Clip:"
             audio_html_parts.append(f'''
         <div class="audio-player">
             <label>{label}</label>

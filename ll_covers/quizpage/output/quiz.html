@@ -119,6 +119,26 @@ header h1 {
     text-transform: uppercase;
 }
 
+/* Notes section */
+.notes-section {
+    margin-top: 10px;
+}
+
+.notes-toggle {
+    background-color: #8e44ad;
+}
+
+.notes-section .spoiler-content {
+    background-color: #f5eef8;
+    border-left-color: #8e44ad;
+}
+
+.notes {
+    color: var(--text-color);
+    margin: 0;
+    font-style: italic;
+}
+
 /* Feedback section */
 .feedback-section {
     margin-top: 20px;
@@ -174,38 +194,37 @@ footer {
         </header>
 
         <section class="instructions">
-            <p class="instructions-text">Each question below contains a sample from a song that was later covered. In many, but not all, cases the cover went on the be more famous. Sometimes the original will have been covered many times, so for each question we will provide the year that the original was release and the year that a particular. We want the name of the released the *cover version*. For example, if the clue said &#x27;Original: 1974; Cover: 1992.&#x27; and had this clip:</p>
+            <p class="instructions-text">Each question below contains has a snippet from a song that went on to have a well-known cover version by a different artist. We want the name of the artist that release the cover version, NOT the artist performing in the recorded sample.
+
+Some songs have inspired multiple well-known covers, so pay attention to the *year* of the cover as well.
+
+For example, if the question states &#x27;Original: 1974; Cover: 1992.&#x27; and had this clip:</p>
 
         <div class="audio-player">
             <label>Sample:</label>
             <audio controls>
-                <source src="../data/raw/i_will_always_love_you.mp3" type="audio/mpeg">
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/35a04d7d5f77_42707_45942.mp3" type="audio/mpeg">
                 Your browser does not support the audio element.
             </audio>
         </div>
-<p class="post-sample-text">You&#x27;d realize that that&#x27;s Dolly Parton&#x27;s 1974 song _I Will Always Love You_, and it was covered in 1992 by Whitney Houston. You would answer with &#x27;Whitney Houston&#x27;</p>
+<p class="post-sample-text">You should listen to that sample and figure out that it is the song _I Will Always Love You_ (originally released by Dolly Parton in 1974). In 1992, it was covered in by Whitney Houston. So the correct answer should be &quot;Whitney Houston&quot;.
+
+I need to whittle this down to a smaller set, so I&#x27;ve got a feedback box for each question. Let me know if the snippet i selected wasnt good (too hard/too easy), the cover wasn&#x27;t sufficiently famous that you think people would know it, or whether if any of them are particulary interesting and that i should be sure to include it.
+
+ALSO: For the purposes of this test, some songs have multiple snippets that I&#x27;m testing out but the real version will just have one. If you have opinions on which candidates to use, let me know in the feedback.</p>
         </section>
 
         <section class="questions">
             
     <div class="question" data-question-number="1" data-question-title="Watchtower">
-        <h3>1.&nbsp;Original: 1967
-Cover: 1968</h3>
+        <h3>1.&nbsp;Original: 1967; Cover: 1968</h3>
 
         <div class="audio-players">
             
         <div class="audio-player">
-            <label>Clip 1:</label>
+            <label>Clip:</label>
             <audio controls>
-                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/2275d0f0b4b5_10000_15123.mp3" type="audio/mpeg">
-                Your browser does not support the audio element.
-            </audio>
-        </div>
-
-        <div class="audio-player">
-            <label>Clip 2:</label>
-            <audio controls>
-                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/2275d0f0b4b5_16200_18100.mp3" type="audio/mpeg">
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/2275d0f0b4b5_96703_104484.mp3" type="audio/mpeg">
                 Your browser does not support the audio element.
             </audio>
         </div>
@@ -219,7 +238,7 @@ Cover: 1968</h3>
                 <p class="answer">Jimi Hendrix (Original: Bob Dylan)</p>
             </div>
         </div>
-
+        
         <div class="feedback-section">
             <label for="feedback-1">Feedback:</label>
             <input type="text"
@@ -232,16 +251,15 @@ Cover: 1968</h3>
         </div>
     </div>
 
-    <div class="question" data-question-number="2" data-question-title="I will always love you">
-        <h3>2.&nbsp;Original: 1974
-Cover: 1992</h3>
+    <div class="question" data-question-number="2" data-question-title="Blinded by the light">
+        <h3>2.&nbsp;Original: 1973; Cover: 1976</h3>
 
         <div class="audio-players">
             
         <div class="audio-player">
-            <label>Audio:</label>
+            <label>Clip:</label>
             <audio controls>
-                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/35a04d7d5f77_72000_75200.mp3" type="audio/mpeg">
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/325ba83a38fc_179336_187087.mp3" type="audio/mpeg">
                 Your browser does not support the audio element.
             </audio>
         </div>
@@ -252,28 +270,34 @@ Cover: 1992</h3>
                 Show Answer
             </button>
             <div class="spoiler-content hidden">
-                <p class="answer">Whitney Houston (Original: Dolly Parton)</p>
+                <p class="answer">Manfred Mann&#x27;s Earth Band (Original: Bruce Springsteen)</p>
             </div>
         </div>
-
+        
         <div class="feedback-section">
             <label for="feedback-2">Feedback:</label>
             <input type="text"
                    id="feedback-2"
                    class="feedback-input"
                    placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(2, 'I will always love you')">
+            <button class="feedback-submit" onclick="submitFeedback(2, 'Blinded by the light')">
                 Submit
             </button>
         </div>
     </div>
 
     <div class="question" data-question-number="3" data-question-title="Respect">
-        <h3>3.&nbsp;Original: 1965
-Cover: 1967</h3>
+        <h3>3.&nbsp;Original: 1965; Cover: 1967</h3>
 
         <div class="audio-players">
-            <p class="media-missing">Media missing</p>
+            
+        <div class="audio-player">
+            <label>Clip:</label>
+            <audio controls>
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/adb00236071c_59157_61515.mp3" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
         </div>
 
         <div class="answer-section">
@@ -284,7 +308,7 @@ Cover: 1967</h3>
                 <p class="answer">Aretha Franklin (Original: Otis Redding)</p>
             </div>
         </div>
-
+        
         <div class="feedback-section">
             <label for="feedback-3">Feedback:</label>
             <input type="text"
@@ -297,41 +321,26 @@ Cover: 1967</h3>
         </div>
     </div>
 
-    <div class="question" data-question-number="4" data-question-title="Blinded by the light">
-        <h3>4.&nbsp;Original: 1973
-Cover: 1976</h3>
+    <div class="question" data-question-number="4" data-question-title="Tainted love">
+        <h3>4.&nbsp;Original: 1965; Cover: 1981</h3>
 
         <div class="audio-players">
-            <p class="media-missing">Media missing</p>
+            
+        <div class="audio-player">
+            <label>Potential Clip 1:</label>
+            <audio controls>
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/d84fccf97178_3384_9696.mp3" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
         </div>
 
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Manfred Mann&#x27;s Earth Band (Original: Bruce Springsteen)</p>
-            </div>
+        <div class="audio-player">
+            <label>Potential Clip 2:</label>
+            <audio controls>
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/d84fccf97178_89812_93937.mp3" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
         </div>
-
-        <div class="feedback-section">
-            <label for="feedback-4">Feedback:</label>
-            <input type="text"
-                   id="feedback-4"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(4, 'Blinded by the light')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="5" data-question-title="Tainted love">
-        <h3>5.&nbsp;Original: 1965
-Cover: 1981</h3>
-
-        <div class="audio-players">
-            <p class="media-missing">Media missing</p>
         </div>
 
         <div class="answer-section">
@@ -342,22 +351,72 @@ Cover: 1981</h3>
                 <p class="answer">Soft Cell (Original: Gloria Jones)</p>
             </div>
         </div>
+        
+        <div class="notes-section">
+            <button class="spoiler-toggle notes-toggle" onclick="toggleSpoiler(this)">
+                Show Notes from Brenton
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="notes">Marilyn Manson also covered (in 2001)</p>
+            </div>
+        </div>
+        <div class="feedback-section">
+            <label for="feedback-4">Feedback:</label>
+            <input type="text"
+                   id="feedback-4"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(4, 'Tainted love')">
+                Submit
+            </button>
+        </div>
+    </div>
 
+    <div class="question" data-question-number="5" data-question-title="Bobby McGee">
+        <h3>5.&nbsp;Original: 1970; Cover: 1971</h3>
+
+        <div class="audio-players">
+            
+        <div class="audio-player">
+            <label>Clip:</label>
+            <audio controls>
+                <source src="/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed/14bddb19e3d4_173295_179865.mp3" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Janis Joplin (Original: Gordon Lightfoot)</p>
+            </div>
+        </div>
+        
+        <div class="notes-section">
+            <button class="spoiler-toggle notes-toggle" onclick="toggleSpoiler(this)">
+                Show Notes from Brenton
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="notes">I&#x27;m a little worried about the definition of &#x27;original&#x27; here. Kris Kristofferson wrote it, then Gordon lightfoot released a version in 1970. Then Kris and Janis BOTH released a version in 1971. Gordon is &quot;original&quot; if you go by first released, but it *feels* like Kris&#x27; should be the &#x27;original&#x27; because he wrote it.</p>
+            </div>
+        </div>
         <div class="feedback-section">
             <label for="feedback-5">Feedback:</label>
             <input type="text"
                    id="feedback-5"
                    class="feedback-input"
                    placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(5, 'Tainted love')">
+            <button class="feedback-submit" onclick="submitFeedback(5, 'Bobby McGee')">
                 Submit
             </button>
         </div>
     </div>
 
     <div class="question" data-question-number="6" data-question-title="New York New York">
-        <h3>6.&nbsp;Original: 1977
-Cover: 1979</h3>
+        <h3>6.&nbsp;Original: 1977; Cover: 1979</h3>
 
         <div class="audio-players">
             <p class="media-missing">Media missing</p>
@@ -371,7 +430,7 @@ Cover: 1979</h3>
                 <p class="answer">Frank Sinatra (Original: Liza Minelli)</p>
             </div>
         </div>
-
+        
         <div class="feedback-section">
             <label for="feedback-6">Feedback:</label>
             <input type="text"
@@ -384,618 +443,8 @@ Cover: 1979</h3>
         </div>
     </div>
 
-    <div class="question" data-question-number="7" data-question-title="Twist and shout">
-        <h3>7.&nbsp;Original: 1961
-Cover: 1963</h3>
-
-        <div class="audio-players">
-            <p class="media-missing">Media missing</p>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">The Beatles (Original: The Top Notes)</p>
-            </div>
-        </div>
-
-        <div class="feedback-section">
-            <label for="feedback-7">Feedback:</label>
-            <input type="text"
-                   id="feedback-7"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(7, 'Twist and shout')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="8" data-question-title="Man who sold the world">
-        <h3>8.&nbsp;Original: 1970
-Cover: 1993</h3>
-
-        <div class="audio-players">
-            <p class="media-missing">Media missing</p>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Nirvana (Original: David Bowie)</p>
-            </div>
-        </div>
-
-        <div class="feedback-section">
-            <label for="feedback-8">Feedback:</label>
-            <input type="text"
-                   id="feedback-8"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(8, 'Man who sold the world')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="9" data-question-title="Black magic woman">
-        <h3>9.&nbsp;Original: 1968
-Cover: 1970</h3>
-
-        <div class="audio-players">
-            <p class="media-missing">Media missing</p>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Santana (Original: Fleetwood Mac)</p>
-            </div>
-        </div>
-
-        <div class="feedback-section">
-            <label for="feedback-9">Feedback:</label>
-            <input type="text"
-                   id="feedback-9"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(9, 'Black magic woman')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="10" data-question-title="Feel the noize">
-        <h3>10.&nbsp;Original: 1973
-Cover: 1983</h3>
-
-        <div class="audio-players">
-            <p class="media-missing">Media missing</p>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Quiet Riot (Original: Slade)</p>
-            </div>
-        </div>
-
-        <div class="feedback-section">
-            <label for="feedback-10">Feedback:</label>
-            <input type="text"
-                   id="feedback-10"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(10, 'Feel the noize')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="11" data-question-title="Mony mony">
-        <h3>11.&nbsp;Original: 1968
-Cover: 1981</h3>
-
-        <div class="audio-players">
-            <p class="media-missing">Media missing</p>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Billy Idol (Original: Tommy James &amp; The Shondells)</p>
-            </div>
-        </div>
-
-        <div class="feedback-section">
-            <label for="feedback-11">Feedback:</label>
-            <input type="text"
-                   id="feedback-11"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(11, 'Mony mony')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="12" data-question-title="Red red wine">
-        <h3>12.&nbsp;Original: 1967
-Cover: 1983</h3>
-
-        <div class="audio-players">
-            <p class="media-missing">Media missing</p>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">UB40 (Original: Neil Diamond)</p>
-            </div>
-        </div>
-
-        <div class="feedback-section">
-            <label for="feedback-12">Feedback:</label>
-            <input type="text"
-                   id="feedback-12"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(12, 'Red red wine')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="13" data-question-title="Bjork quiet">
-        <h3>13.&nbsp;Original: 1951
-Cover: 1995</h3>
-
-        <div class="audio-players">
-            <p class="media-missing">Media missing</p>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Bjork (Original: Betty Hutton)</p>
-            </div>
-        </div>
-
-        <div class="feedback-section">
-            <label for="feedback-13">Feedback:</label>
-            <input type="text"
-                   id="feedback-13"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(13, 'Bjork quiet')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="14" data-question-title="Killing me softly">
-        <h3>14.&nbsp;Original: 1972
-Cover: 1996</h3>
-
-        <div class="audio-players">
-            <p class="media-missing">Media missing</p>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Fugees (Original: Lori Lieberman)</p>
-            </div>
-        </div>
-
-        <div class="feedback-section">
-            <label for="feedback-14">Feedback:</label>
-            <input type="text"
-                   id="feedback-14"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(14, 'Killing me softly')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="15" data-question-title="Mama told me not to come">
-        <h3>15.&nbsp;Original: 1966
-Cover: 1970</h3>
-
-        <div class="audio-players">
-            <p class="media-missing">Media missing</p>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Three Dog Night (Original: Randy Newman)</p>
-            </div>
-        </div>
-
-        <div class="feedback-section">
-            <label for="feedback-15">Feedback:</label>
-            <input type="text"
-                   id="feedback-15"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(15, 'Mama told me not to come')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="16" data-question-title="Downtown train">
-        <h3>16.&nbsp;Original: 1985
-Cover: 1989</h3>
-
-        <div class="audio-players">
-            <p class="media-missing">Media missing</p>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Rod Stewart (Original: Tom Waits)</p>
-            </div>
-        </div>
-
-        <div class="feedback-section">
-            <label for="feedback-16">Feedback:</label>
-            <input type="text"
-                   id="feedback-16"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(16, 'Downtown train')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="17" data-question-title="One">
-        <h3>17.&nbsp;Original: 1968
-Cover: 1968</h3>
-
-        <div class="audio-players">
-            <p class="media-missing">Media missing</p>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Three Dog Night (Original: Harry Nillsson)</p>
-            </div>
-        </div>
-
-        <div class="feedback-section">
-            <label for="feedback-17">Feedback:</label>
-            <input type="text"
-                   id="feedback-17"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(17, 'One')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="18" data-question-title="Why can&#x27;t we be friends">
-        <h3>18.&nbsp;Original: 1975
-Cover: 1998</h3>
-
-        <div class="audio-players">
-            <p class="media-missing">Media missing</p>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Smashmouth (Original: War)</p>
-            </div>
-        </div>
-
-        <div class="feedback-section">
-            <label for="feedback-18">Feedback:</label>
-            <input type="text"
-                   id="feedback-18"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(18, 'Why can\'t we be friends')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="19" data-question-title="Elvis something">
-        <h3>19.&nbsp;Original: 1953
-Cover: 1956</h3>
-
-        <div class="audio-players">
-            <p class="media-missing">Media missing</p>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Elvis (Original: Big Mama Thornton)</p>
-            </div>
-        </div>
-
-        <div class="feedback-section">
-            <label for="feedback-19">Feedback:</label>
-            <input type="text"
-                   id="feedback-19"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(19, 'Elvis something')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="20" data-question-title="Ring of fire">
-        <h3>20.&nbsp;Original: 1962
-Cover: 1963</h3>
-
-        <div class="audio-players">
-            <p class="media-missing">Media missing</p>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Johnny Cash (Original: Anita Carter)</p>
-            </div>
-        </div>
-
-        <div class="feedback-section">
-            <label for="feedback-20">Feedback:</label>
-            <input type="text"
-                   id="feedback-20"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(20, 'Ring of fire')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="21" data-question-title="hazy shade of winter">
-        <h3>21.&nbsp;Original: 1966
-Cover: 1987</h3>
-
-        <div class="audio-players">
-            <p class="media-missing">Media missing</p>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">The Bangles (Original: Simon &amp; Garfunkel)</p>
-            </div>
-        </div>
-
-        <div class="feedback-section">
-            <label for="feedback-21">Feedback:</label>
-            <input type="text"
-                   id="feedback-21"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(21, 'hazy shade of winter')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="22" data-question-title="Love hurts">
-        <h3>22.&nbsp;Original: 1960
-Cover: 1974</h3>
-
-        <div class="audio-players">
-            <p class="media-missing">Media missing</p>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Nazareth (Original: Everly Brothers)</p>
-            </div>
-        </div>
-
-        <div class="feedback-section">
-            <label for="feedback-22">Feedback:</label>
-            <input type="text"
-                   id="feedback-22"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(22, 'Love hurts')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="23" data-question-title="Tambourine man">
-        <h3>23.&nbsp;Original: 1965
-Cover: 1965</h3>
-
-        <div class="audio-players">
-            <p class="media-missing">Media missing</p>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">The Byrds (Original: Bob Dylan)</p>
-            </div>
-        </div>
-
-        <div class="feedback-section">
-            <label for="feedback-23">Feedback:</label>
-            <input type="text"
-                   id="feedback-23"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(23, 'Tambourine man')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="24" data-question-title="The loco-motion">
-        <h3>24.&nbsp;Original: 1962
-Cover: 1987</h3>
-
-        <div class="audio-players">
-            <p class="media-missing">Media missing</p>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Kyline Minogue (Original: Little Eva)</p>
-            </div>
-        </div>
-
-        <div class="feedback-section">
-            <label for="feedback-24">Feedback:</label>
-            <input type="text"
-                   id="feedback-24"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(24, 'The loco-motion')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="25" data-question-title="I think we&#x27;re alone now">
-        <h3>25.&nbsp;Original: 1967
-Cover: 1987</h3>
-
-        <div class="audio-players">
-            <p class="media-missing">Media missing</p>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Tiffany (Original: Tommy James &amp; The Shondells)</p>
-            </div>
-        </div>
-
-        <div class="feedback-section">
-            <label for="feedback-25">Feedback:</label>
-            <input type="text"
-                   id="feedback-25"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(25, 'I think we\'re alone now')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="26" data-question-title="Some kind of wonderful">
-        <h3>26.&nbsp;Original: 1967
-Cover: 1974</h3>
-
-        <div class="audio-players">
-            <p class="media-missing">Media missing</p>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Grand Funk Railrod (Original: Soul Brothers Six)</p>
-            </div>
-        </div>
-
-        <div class="feedback-section">
-            <label for="feedback-26">Feedback:</label>
-            <input type="text"
-                   id="feedback-26"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(26, 'Some kind of wonderful')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="27" data-question-title="knockin on heavens door">
-        <h3>27.&nbsp;Original: 1973
-Cover: 1987</h3>
-
-        <div class="audio-players">
-            <p class="media-missing">Media missing</p>
-        </div>
-
-        <div class="answer-section">
-            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
-                Show Answer
-            </button>
-            <div class="spoiler-content hidden">
-                <p class="answer">Guns &#x27;n&#x27; Roses (Original: Bob Dylan)</p>
-            </div>
-        </div>
-
-        <div class="feedback-section">
-            <label for="feedback-27">Feedback:</label>
-            <input type="text"
-                   id="feedback-27"
-                   class="feedback-input"
-                   placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(27, 'knockin on heavens door')">
-                Submit
-            </button>
-        </div>
-    </div>
-
-    <div class="question" data-question-number="28" data-question-title="with a little help from my friends">
-        <h3>28.&nbsp;Original: 1967
-Cover: 1968</h3>
+    <div class="question" data-question-number="7" data-question-title="with a little help from my friends">
+        <h3>7.&nbsp;Original: 1967; Cover: 1968</h3>
 
         <div class="audio-players">
             <p class="media-missing">Media missing</p>
@@ -1009,22 +458,233 @@ Cover: 1968</h3>
                 <p class="answer">Joe Cocker (Original: The Beatles)</p>
             </div>
         </div>
-
+        
+        <div class="notes-section">
+            <button class="spoiler-toggle notes-toggle" onclick="toggleSpoiler(this)">
+                Show Notes from Brenton
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="notes">Because this was that Beatles, there are a LOT of other covers but I think the year (and relative fame) of this version should narrow it down enough</p>
+            </div>
+        </div>
         <div class="feedback-section">
-            <label for="feedback-28">Feedback:</label>
+            <label for="feedback-7">Feedback:</label>
             <input type="text"
-                   id="feedback-28"
+                   id="feedback-7"
                    class="feedback-input"
                    placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(28, 'with a little help from my friends')">
+            <button class="feedback-submit" onclick="submitFeedback(7, 'with a little help from my friends')">
                 Submit
             </button>
         </div>
     </div>
 
-    <div class="question" data-question-number="29" data-question-title="torn">
-        <h3>29.&nbsp;Original: 1995
-Cover: 1997</h3>
+    <div class="question" data-question-number="8" data-question-title="Black magic woman">
+        <h3>8.&nbsp;Original: 1968; Cover: 1970</h3>
+
+        <div class="audio-players">
+            <p class="media-missing">Media missing</p>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Santana (Original: Fleetwood Mac)</p>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-8">Feedback:</label>
+            <input type="text"
+                   id="feedback-8"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(8, 'Black magic woman')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="9" data-question-title="I think we&#x27;re alone now">
+        <h3>9.&nbsp;Original: 1967; Cover: 1987</h3>
+
+        <div class="audio-players">
+            <p class="media-missing">Media missing</p>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Tiffany (Original: Tommy James &amp; The Shondells)</p>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-9">Feedback:</label>
+            <input type="text"
+                   id="feedback-9"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(9, 'I think we\'re alone now')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="10" data-question-title="Ring of fire">
+        <h3>10.&nbsp;Original: 1962; Cover: 1963</h3>
+
+        <div class="audio-players">
+            <p class="media-missing">Media missing</p>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Johnny Cash (Original: Anita Carter)</p>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-10">Feedback:</label>
+            <input type="text"
+                   id="feedback-10"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(10, 'Ring of fire')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="11" data-question-title="hazy shade of winter">
+        <h3>11.&nbsp;Original: 1966; Cover: 1987</h3>
+
+        <div class="audio-players">
+            <p class="media-missing">Media missing</p>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">The Bangles (Original: Simon &amp; Garfunkel)</p>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-11">Feedback:</label>
+            <input type="text"
+                   id="feedback-11"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(11, 'hazy shade of winter')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="12" data-question-title="Some kind of wonderful">
+        <h3>12.&nbsp;Original: 1967; Cover: 1974</h3>
+
+        <div class="audio-players">
+            <p class="media-missing">Media missing</p>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Grand Funk Railrod (Original: Soul Brothers Six)</p>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-12">Feedback:</label>
+            <input type="text"
+                   id="feedback-12"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(12, 'Some kind of wonderful')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="13" data-question-title="Mony mony">
+        <h3>13.&nbsp;Original: 1968; Cover: 1981</h3>
+
+        <div class="audio-players">
+            <p class="media-missing">Media missing</p>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Billy Idol (Original: Tommy James &amp; The Shondells)</p>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-13">Feedback:</label>
+            <input type="text"
+                   id="feedback-13"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(13, 'Mony mony')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="14" data-question-title="The loco-motion">
+        <h3>14.&nbsp;Original: 1962; Cover: 1987</h3>
+
+        <div class="audio-players">
+            <p class="media-missing">Media missing</p>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Kyline Minogue (Original: Little Eva)</p>
+            </div>
+        </div>
+        
+        <div class="notes-section">
+            <button class="spoiler-toggle notes-toggle" onclick="toggleSpoiler(this)">
+                Show Notes from Brenton
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="notes">Grand Funk Railroad also covered this in the 1970s</p>
+            </div>
+        </div>
+        <div class="feedback-section">
+            <label for="feedback-14">Feedback:</label>
+            <input type="text"
+                   id="feedback-14"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(14, 'The loco-motion')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="15" data-question-title="torn">
+        <h3>15.&nbsp;Original: 1995; Cover: 1997</h3>
 
         <div class="audio-players">
             <p class="media-missing">Media missing</p>
@@ -1038,14 +698,422 @@ Cover: 1997</h3>
                 <p class="answer">Natalie Imbruglia (Original: Ednaswap)</p>
             </div>
         </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-15">Feedback:</label>
+            <input type="text"
+                   id="feedback-15"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(15, 'torn')">
+                Submit
+            </button>
+        </div>
+    </div>
 
+    <div class="question" data-question-number="16" data-question-title="Man who sold the world">
+        <h3>16.&nbsp;Original: 1970; Cover: 1993</h3>
+
+        <div class="audio-players">
+            <p class="media-missing">Media missing</p>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Nirvana (Original: David Bowie)</p>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-16">Feedback:</label>
+            <input type="text"
+                   id="feedback-16"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(16, 'Man who sold the world')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="17" data-question-title="Tambourine man">
+        <h3>17.&nbsp;Original: 1965; Cover: 1965</h3>
+
+        <div class="audio-players">
+            <p class="media-missing">Media missing</p>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">The Byrds (Original: Bob Dylan)</p>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-17">Feedback:</label>
+            <input type="text"
+                   id="feedback-17"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(17, 'Tambourine man')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="18" data-question-title="Bjork quiet">
+        <h3>18.&nbsp;Original: 1951; Cover: 1995</h3>
+
+        <div class="audio-players">
+            <p class="media-missing">Media missing</p>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Bjork (Original: Betty Hutton)</p>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-18">Feedback:</label>
+            <input type="text"
+                   id="feedback-18"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(18, 'Bjork quiet')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="19" data-question-title="Downtown train">
+        <h3>19.&nbsp;Original: 1985; Cover: 1989</h3>
+
+        <div class="audio-players">
+            <p class="media-missing">Media missing</p>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Rod Stewart (Original: Tom Waits)</p>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-19">Feedback:</label>
+            <input type="text"
+                   id="feedback-19"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(19, 'Downtown train')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="20" data-question-title="knockin on heavens door">
+        <h3>20.&nbsp;Original: 1973; Cover: 1987</h3>
+
+        <div class="audio-players">
+            <p class="media-missing">Media missing</p>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Guns &#x27;n&#x27; Roses (Original: Bob Dylan)</p>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-20">Feedback:</label>
+            <input type="text"
+                   id="feedback-20"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(20, 'knockin on heavens door')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="21" data-question-title="One">
+        <h3>21.&nbsp;Original: 1968; Cover: 1968</h3>
+
+        <div class="audio-players">
+            <p class="media-missing">Media missing</p>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Three Dog Night (Original: Harry Nillsson)</p>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-21">Feedback:</label>
+            <input type="text"
+                   id="feedback-21"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(21, 'One')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="22" data-question-title="Why can&#x27;t we be friends">
+        <h3>22.&nbsp;Original: 1975; Cover: 1998</h3>
+
+        <div class="audio-players">
+            <p class="media-missing">Media missing</p>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Smashmouth (Original: War)</p>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-22">Feedback:</label>
+            <input type="text"
+                   id="feedback-22"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(22, 'Why can\'t we be friends')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="23" data-question-title="Love hurts">
+        <h3>23.&nbsp;Original: 1960; Cover: 1974</h3>
+
+        <div class="audio-players">
+            <p class="media-missing">Media missing</p>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Nazareth (Original: Everly Brothers)</p>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-23">Feedback:</label>
+            <input type="text"
+                   id="feedback-23"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(23, 'Love hurts')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="24" data-question-title="Feel the noize">
+        <h3>24.&nbsp;Original: 1973; Cover: 1983</h3>
+
+        <div class="audio-players">
+            <p class="media-missing">Media missing</p>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Quiet Riot (Original: Slade)</p>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-24">Feedback:</label>
+            <input type="text"
+                   id="feedback-24"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(24, 'Feel the noize')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="25" data-question-title="Twist and shout">
+        <h3>25.&nbsp;Original: 1961; Cover: 1963</h3>
+
+        <div class="audio-players">
+            <p class="media-missing">Media missing</p>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">The Beatles (Original: The Top Notes)</p>
+            </div>
+        </div>
+        
+        <div class="notes-section">
+            <button class="spoiler-toggle notes-toggle" onclick="toggleSpoiler(this)">
+                Show Notes from Brenton
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="notes">There were lots of other covers after the Beatles version (like Salt &#x27;n&#x27; Peppa?!)</p>
+            </div>
+        </div>
+        <div class="feedback-section">
+            <label for="feedback-25">Feedback:</label>
+            <input type="text"
+                   id="feedback-25"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(25, 'Twist and shout')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="26" data-question-title="Killing me softly">
+        <h3>26.&nbsp;Original: 1972; Cover: 1996</h3>
+
+        <div class="audio-players">
+            <p class="media-missing">Media missing</p>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Fugees (Original: Lori Lieberman)</p>
+            </div>
+        </div>
+        
+        <div class="notes-section">
+            <button class="spoiler-toggle notes-toggle" onclick="toggleSpoiler(this)">
+                Show Notes from Brenton
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="notes">Roberta Flack had a cover in 1973 that was bigger than the original and it&#x27;s pretty clear that the fugees were more inspired by that one</p>
+            </div>
+        </div>
+        <div class="feedback-section">
+            <label for="feedback-26">Feedback:</label>
+            <input type="text"
+                   id="feedback-26"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(26, 'Killing me softly')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="27" data-question-title="Mama told me not to come">
+        <h3>27.&nbsp;Original: 1966; Cover: 1970</h3>
+
+        <div class="audio-players">
+            <p class="media-missing">Media missing</p>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Three Dog Night (Original: Randy Newman)</p>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-27">Feedback:</label>
+            <input type="text"
+                   id="feedback-27"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(27, 'Mama told me not to come')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="28" data-question-title="Elvis something">
+        <h3>28.&nbsp;Original: 1953; Cover: 1956</h3>
+
+        <div class="audio-players">
+            <p class="media-missing">Media missing</p>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">Elvis (Original: Big Mama Thornton)</p>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <label for="feedback-28">Feedback:</label>
+            <input type="text"
+                   id="feedback-28"
+                   class="feedback-input"
+                   placeholder="Any notes or feedback for this question?">
+            <button class="feedback-submit" onclick="submitFeedback(28, 'Elvis something')">
+                Submit
+            </button>
+        </div>
+    </div>
+
+    <div class="question" data-question-number="29" data-question-title="Red red wine">
+        <h3>29.&nbsp;Original: 1967; Cover: 1983</h3>
+
+        <div class="audio-players">
+            <p class="media-missing">Media missing</p>
+        </div>
+
+        <div class="answer-section">
+            <button class="spoiler-toggle" onclick="toggleSpoiler(this)">
+                Show Answer
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="answer">UB40 (Original: Neil Diamond)</p>
+            </div>
+        </div>
+        
         <div class="feedback-section">
             <label for="feedback-29">Feedback:</label>
             <input type="text"
                    id="feedback-29"
                    class="feedback-input"
                    placeholder="Any notes or feedback for this question?">
-            <button class="feedback-submit" onclick="submitFeedback(29, 'torn')">
+            <button class="feedback-submit" onclick="submitFeedback(29, 'Red red wine')">
                 Submit
             </button>
         </div>
@@ -1074,10 +1142,10 @@ function toggleSpoiler(button) {
 
 // Google Forms configuration
 const FORM_CONFIG = {
-    formId: '',
+    formId: '1FAIpQLSfQ8wYskpCbmo4s1IDNid-rQ180HI7LeclliJghg507ZvmDHA',
     fields: {
-        questionTitle: '',
-        feedbackText: ''
+        questionTitle: 'entry.155174699',
+        feedbackText: 'entry.1550921030'
     }
 };
 

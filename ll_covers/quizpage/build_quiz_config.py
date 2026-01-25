@@ -212,33 +212,43 @@ def build_config():
     snippets = read_snippets(spreadsheet)
     print(f"  Found snippets for {len(snippets)} songs")
 
-    # Randomize question order
-    random.shuffle(songs)
+    # Build questions array (without question numbers first)
+    questions_with_audio = []
+    questions_without_audio = []
 
-    # Build questions array
-    questions = []
-    missing_audio_count = 0
-
-    for idx, song in enumerate(songs, start=1):
+    for song in songs:
         title_lower = song['title'].lower()
         audiofiles = snippets.get(title_lower, [])
 
         # Sort clips by start time, then end time for consistent ordering
         audiofiles = sort_clips_by_timing(audiofiles)
 
-        if not audiofiles:
-            missing_audio_count += 1
-            print(f"  WARNING: No audio files for '{song['title']}'")
-
         question = {
-            'question_number': idx,
             'question_title': song['title'],
             'question_text': f"Original: {song['original_year']}; Cover: {song['cover_year']}",
             'audiofiles': audiofiles,  # Empty list means "media missing"
             'answer_text': f"{song['cover_artist']} (Original: {song['original_artist']})",
             'notes': song['notes'],  # Optional notes from Brenton
         }
-        questions.append(question)
+
+        if audiofiles:
+            questions_with_audio.append(question)
+        else:
+            questions_without_audio.append(question)
+            print(f"  WARNING: No audio files for '{song['title']}'")
+
+    # Randomize each group separately
+    random.shuffle(questions_with_audio)
+    random.shuffle(questions_without_audio)
+
+    # Combine: questions with audio first, then questions without audio
+    questions = questions_with_audio + questions_without_audio
+
+    # Assign question numbers
+    for idx, question in enumerate(questions, start=1):
+        question['question_number'] = idx
+
+    missing_audio_count = len(questions_without_audio)
 
     # Build config
     # Key names in kv_store use double underscores for google_form fields
