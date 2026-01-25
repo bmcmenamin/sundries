@@ -107,20 +107,11 @@ def trim_audio(input_path, output_path, start_time, end_time):
         duration = (end_time - start_time) if end_time is not None else None
 
         # Build audio filter chain:
-        # 1. Convert to stereo (aformat)
-        # 2. Normalize volume using EBU R128 loudness normalization (loudnorm)
-        # 3. Add short fade in/out for smooth playback (afade)
-        fade_duration = 0.1  # 100ms fade
+        # 1. Dynamic audio normalization (evens out volume levels)
+        # Note: stereo conversion is handled by -ac 2 output option
         filters = [
-            'aformat=channel_layouts=stereo',  # Force stereo output
-            'loudnorm=I=-16:TP=-1.5:LRA=11',   # EBU R128 normalization
+            'dynaudnorm=f=150:g=15',            # Dynamic normalization (frame=150, gauss=15)
         ]
-
-        # Add fade in/out if we know the duration
-        if duration is not None and duration > (fade_duration * 2):
-            fade_out_start = duration - fade_duration
-            filters.append(f'afade=t=in:st=0:d={fade_duration}')
-            filters.append(f'afade=t=out:st={fade_out_start:.3f}:d={fade_duration}')
 
         filter_chain = ','.join(filters)
 
@@ -146,7 +137,7 @@ def trim_audio(input_path, output_path, start_time, end_time):
         ])
 
         print(f"  Trimming from {start_time:.3f}s to {end_time:.3f}s" if end_time else f"  Trimming from {start_time:.3f}s to end")
-        print(f"  Applying: stereo, loudnorm, fade, 192kbps")
+        print(f"  Applying: stereo, dynaudnorm, 192kbps")
         print(f"  Saving to {output_path}")
 
         # Run ffmpeg
