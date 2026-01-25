@@ -80,6 +80,7 @@ def download_youtube_to_mp3(youtube_url, output_path):
         'quiet': False,
         'no_warnings': False,
         'extract_flat': False,
+        'noplaylist': True,  # Only download single video, not playlist
     }
 
     try:
@@ -177,8 +178,25 @@ def process_sheet():
         else:
             print(f"  ✗ MP3 file missing or path empty")
 
+        # Skip rows with no title
+        if not song_title.strip():
+            print(f"  SKIP: No song title")
+            continue
+
         # If MP3 doesn't exist and we have a YouTube URL, download it
         if not mp3_exists and youtube_url:
+            # Validate that it's actually a URL (not a smart chip display text)
+            is_valid_url = (
+                youtube_url.startswith('http://') or
+                youtube_url.startswith('https://') or
+                'youtube.com' in youtube_url or
+                'youtu.be' in youtube_url
+            )
+            if not is_valid_url:
+                print(f"  SKIP: '{youtube_url}' is not a valid URL")
+                print(f"         (If using Google Sheets smart chips, convert to plain URL)")
+                continue
+
             # Generate filename from song title, fallback to video ID or row number
             cleaned_title = clean_filename(song_title)
             if cleaned_title:

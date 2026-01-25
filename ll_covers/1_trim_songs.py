@@ -1,102 +1,100 @@
 #!/Users/mcmenamin/Repos/sundries/ll_covers/venv/bin/python
 """
-Script to trim MP3 files based on segment start/end times from Google Sheets.
+Script to trim MP3 files into snippets based on the 'snippets' tab in Google Sheets.
+
+Looks up source MP3 files from the 'songs' tab by matching song title,
+then trims to the specified time range and saves with an obfuscated filename.
 """
 
 import os
 import sys
 import subprocess
+import hashlib
 import gspread
 import google.auth
-import re
 from pathlib import Path
 
 
 # Google Sheet ID from the URL
 SHEET_ID = '10_oOMSlLbyc9VJfA1fGzZeknr4yQxiyW-hY_cfzyZbA'
-TAB_NAME = 'songs'
+SONGS_TAB_NAME = 'songs'
+SNIPPETS_TAB_NAME = 'snippets'
 
 # Directory for trimmed MP3 files
 TRIMMED_DIR = Path('/Users/mcmenamin/Repos/sundries/ll_covers/data/trimmed')
 
 
-def clean_filename(title):
+def generate_snippet_filename(title, start, end):
     """
-    Clean a song title to create a safe filename.
+    Generate an obfuscated filename for a snippet.
+
+    The filename consists of a hash of the title (so snippets from the same song
+    share a prefix) followed by start/end times in milliseconds.
 
     Args:
-        title: Song title from the sheet
+        title: Song title
+        start: Start time in seconds (float)
+        end: End time in seconds (float)
 
     Returns:
-        Cleaned filename string (lowercase, underscores instead of spaces, etc.)
+        Filename like "a3f2b1c9d0e4_72500_120000.mp3"
     """
-    if not title:
-        return None
-
-    # Convert to lowercase
-    cleaned = title.lower()
-
-    # Replace spaces with underscores
-    cleaned = cleaned.replace(' ', '_')
-
-    # Remove or replace special characters - keep only alphanumeric, underscores, and hyphens
-    cleaned = re.sub(r'[^a-z0-9_-]', '', cleaned)
-
-    # Remove multiple consecutive underscores
-    cleaned = re.sub(r'_+', '_', cleaned)
-
-    # Remove leading/trailing underscores
-    cleaned = cleaned.strip('_')
-
-    return cleaned if cleaned else None
+    title_hash = hashlib.md5(title.lower().strip().encode()).hexdigest()[:12]
+    start_ms = int(start * 1000)
+    end_ms = int(end * 1000)
+    return f"{title_hash}_{start_ms}_{end_ms}.mp3"
 
 
-def parse_timestamp(timestamp_str):
+def build_songs_lookup(worksheet):
     """
-    Parse a timestamp string to seconds.
-    Supports formats: "MM:SS", "HH:MM:SS", or just seconds as a number.
+    Build a lookup dict from the songs tab: {normalized_title: mp3_filepath}
 
     Args:
-        timestamp_str: String timestamp (e.g., "1:30", "0:01:30", "90")
+        worksheet: The gspread worksheet for the 'songs' tab
 
     Returns:
-        Float seconds, or None if invalid
+        Dict mapping lowercase/stripped song titles to their MP3 file paths
     """
-    if not timestamp_str or not str(timestamp_str).strip():
-        return None
+    all_values = worksheet.get_all_values()
 
-    timestamp_str = str(timestamp_str).strip()
+    if not all_values:
+        return {}
+
+    headers = all_values[0]
 
     try:
-        # Try parsing as just a number (seconds)
-        return float(timestamp_str)
+        title_idx = headers.index('Song title')
     except ValueError:
-        pass
+        print("ERROR: 'Song title' column not found in songs tab!")
+        return {}
 
-    # Try parsing as MM:SS or HH:MM:SS
-    parts = timestamp_str.split(':')
     try:
-        if len(parts) == 2:  # MM:SS
-            minutes, seconds = parts
-            return int(minutes) * 60 + float(seconds)
-        elif len(parts) == 3:  # HH:MM:SS
-            hours, minutes, seconds = parts
-            return int(hours) * 3600 + int(minutes) * 60 + float(seconds)
+        filepath_idx = headers.index('MP3 filepath')
     except ValueError:
-        pass
+        print("ERROR: 'MP3 filepath' column not found in songs tab!")
+        return {}
 
-    return None
+    lookup = {}
+    for row in all_values[1:]:
+        if title_idx < len(row) and filepath_idx < len(row):
+            title = row[title_idx].lower().strip()
+            filepath = row[filepath_idx]
+            if title and filepath:
+                lookup[title] = filepath
+
+    return lookup
 
 
 def trim_audio(input_path, output_path, start_time, end_time):
     """
     Trim an MP3 file to the specified start and end times using ffmpeg.
+    Uses millisecond precision for accurate trimming.
 
     Args:
         input_path: Path to the input MP3 file
         output_path: Path where to save the trimmed MP3
-        start_time: Start time in seconds
-        end_time: End time in seconds (None means to end of file)
+        start_time: Start time in seconds (float)
+        end_time: End time in seconds (float, None means to end of file)
 
     Returns:
         True if successful, False otherwise
@@ -105,17 +103,17 @@ def trim_audio(input_path, output_path, start_time, end_time):
         # Ensure output directory exists
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Build ffmpeg command
+        # Build ffmpeg command with millisecond precision
         cmd = [
             'ffmpeg',
             '-i', str(input_path),
-            '-ss', str(start_time),  # Start time
+            '-ss', f'{start_time:.3f}',  # Start time with ms precision
         ]
 
         # Add duration if end_time is specified
         if end_time is not None:
             duration = end_time - start_time
-            cmd.extend(['-t', str(duration)])  # Duration
+            cmd.extend(['-t', f'{duration:.3f}'])  # Duration with ms precision
 
         # Output options
         cmd.extend([
@@ -124,7 +122,7 @@ def trim_audio(input_path, output_path, start_time, end_time):
             str(output_path)
         ])
 
-        print(f"  Trimming from {start_time}s to {end_time}s" if end_time else f"  Trimming from {start_time}s to end")
+        print(f"  Trimming from {start_time:.3f}s to {end_time:.3f}s" if end_time else f"  Trimming from {start_time:.3f}s to end")
         print(f"  Saving to {output_path}")
 
         # Run ffmpeg
@@ -151,13 +149,12 @@ def trim_audio(input_path, output_path, start_time, end_time):
 
 
 def process_sheet():
-    """Process the Google Sheet, trim MP3s based on segment times, and update paths."""
+    """Process the snippets tab, look up source files from songs tab, trim and update paths."""
 
     # Ensure trimmed directory exists
     TRIMMED_DIR.mkdir(parents=True, exist_ok=True)
 
     # Use default credentials from gcloud auth login
-    # Need write access to update the sheet
     creds, project = google.auth.default(
         scopes=['https://www.googleapis.com/auth/spreadsheets']
     )
@@ -166,14 +163,19 @@ def process_sheet():
     client = gspread.authorize(creds)
     spreadsheet = client.open_by_key(SHEET_ID)
 
-    # Get the specific worksheet/tab
-    worksheet = spreadsheet.worksheet(TAB_NAME)
+    # Load songs tab and build lookup
+    print("Loading songs tab...")
+    songs_worksheet = spreadsheet.worksheet(SONGS_TAB_NAME)
+    songs_lookup = build_songs_lookup(songs_worksheet)
+    print(f"Found {len(songs_lookup)} songs with MP3 paths\n")
 
-    # Get all values from the worksheet
-    all_values = worksheet.get_all_values()
+    # Load snippets tab
+    print("Loading snippets tab...")
+    snippets_worksheet = spreadsheet.worksheet(SNIPPETS_TAB_NAME)
+    all_values = snippets_worksheet.get_all_values()
 
     if not all_values:
-        print("No data found in the sheet.")
+        print("No data found in snippets tab.")
         return
 
     # First row is the header
@@ -185,69 +187,87 @@ def process_sheet():
     try:
         song_title_idx = headers.index('Song title')
     except ValueError:
-        print("ERROR: 'Song title' column not found!")
-        print(f"Available columns: {headers}")
-        return
-
-    try:
-        mp3_filepath_idx = headers.index('MP3 filepath')
-    except ValueError:
-        print("ERROR: 'MP3 filepath' column not found!")
+        print("ERROR: 'Song title' column not found in snippets tab!")
         print(f"Available columns: {headers}")
         return
 
     try:
         segment_start_idx = headers.index('Segment start')
     except ValueError:
-        print("ERROR: 'Segment start' column not found!")
+        print("ERROR: 'Segment start' column not found in snippets tab!")
         print(f"Available columns: {headers}")
         return
 
     try:
         segment_end_idx = headers.index('Segment End')
     except ValueError:
-        print("ERROR: 'Segment End' column not found!")
+        print("ERROR: 'Segment End' column not found in snippets tab!")
         print(f"Available columns: {headers}")
         return
 
     try:
         mp3_segment_idx = headers.index('MP3 Segment')
     except ValueError:
-        print("ERROR: 'MP3 Segment' column not found!")
+        print("ERROR: 'MP3 Segment' column not found in snippets tab!")
         print(f"Available columns: {headers}")
         return
 
     # Process each row
     updates_made = []
+    skipped_missing = []
+
     for idx, row in enumerate(all_values[1:], start=2):  # Start at 2 for sheet row number
         # Ensure row has enough columns
         while len(row) < len(headers):
             row.append('')
 
         song_title = row[song_title_idx] if song_title_idx < len(row) else ''
-        mp3_filepath = row[mp3_filepath_idx] if mp3_filepath_idx < len(row) else ''
         segment_start = row[segment_start_idx] if segment_start_idx < len(row) else ''
         segment_end = row[segment_end_idx] if segment_end_idx < len(row) else ''
         mp3_segment = row[mp3_segment_idx] if mp3_segment_idx < len(row) else ''
 
         print(f"\nRow {idx}:")
         print(f"  Song title: {song_title}")
-        print(f"  MP3 filepath: {mp3_filepath}")
         print(f"  Segment start: {segment_start}")
         print(f"  Segment end: {segment_end}")
-        print(f"  Current MP3 Segment: {mp3_segment}")
+        print(f"  Current mp3 segment: {mp3_segment}")
 
-        # Check if source MP3 file exists
-        if not mp3_filepath or not os.path.exists(mp3_filepath):
-            print(f"  SKIP: Source MP3 file not found")
+        # Look up source MP3 from songs tab
+        normalized_title = song_title.lower().strip()
+        source_filepath = songs_lookup.get(normalized_title)
+
+        if not source_filepath:
+            print(f"  WARNING: No source MP3 found for '{song_title}' - skipping")
+            skipped_missing.append((idx, song_title))
             continue
 
-        # Parse timestamps
-        start_time = parse_timestamp(segment_start)
-        end_time = parse_timestamp(segment_end)
+        print(f"  Source MP3: {source_filepath}")
+
+        # Check if source MP3 file exists on disk
+        if not os.path.exists(source_filepath):
+            print(f"  WARNING: Source MP3 file not found on disk - skipping")
+            skipped_missing.append((idx, song_title))
+            continue
+
+        # Parse timestamps as float seconds
+        try:
+            start_time = float(segment_start) if segment_start else None
+        except ValueError:
+            print(f"  SKIP: Invalid segment start time '{segment_start}'")
+            continue
+
+        try:
+            end_time = float(segment_end) if segment_end else None
+        except ValueError:
+            print(f"  SKIP: Invalid segment end time '{segment_end}'")
+            continue
 
         if start_time is None:
-            print(f"  SKIP: No valid segment start time")
+            print(f"  SKIP: No segment start time")
+            continue
+
+        if end_time is None:
+            print(f"  SKIP: No segment end time")
             continue
 
         # Check if trimmed segment already exists
@@ -260,36 +280,30 @@ def process_sheet():
 
         # If segment doesn't exist, create it
         if not segment_exists:
-            # Generate output filename using cleaned song title and timestamps
-            cleaned_title = clean_filename(song_title)
-            if cleaned_title:
-                base_name = cleaned_title
-            else:
-                # Fallback to source filename
-                source_path = Path(mp3_filepath)
-                base_name = source_path.stem
-
-            # Format timestamps for filename (replace : with -)
-            start_str = segment_start.replace(':', '-') if segment_start else '0'
-            end_str = segment_end.replace(':', '-') if segment_end else 'end'
-
-            output_filename = f"{base_name}__{start_str}_to_{end_str}.mp3"
+            # Generate obfuscated output filename
+            output_filename = generate_snippet_filename(song_title, start_time, end_time)
             output_path = TRIMMED_DIR / output_filename
 
             # Trim the audio
-            if trim_audio(mp3_filepath, output_path, start_time, end_time):
+            if trim_audio(source_filepath, output_path, start_time, end_time):
                 # Update the row in the sheet
                 new_filepath = str(output_path)
-                worksheet.update_cell(idx, mp3_segment_idx + 1, new_filepath)
+                snippets_worksheet.update_cell(idx, mp3_segment_idx + 1, new_filepath)
                 updates_made.append((idx, new_filepath))
                 print(f"  Updated sheet with path: {new_filepath}")
 
     print("\n" + "=" * 80)
-    print(f"Processing complete! {len(updates_made)} files trimmed and updated.")
+    print(f"Processing complete! {len(updates_made)} snippets trimmed and updated.")
+
     if updates_made:
-        print("\nUpdated rows:")
+        print("\nCreated snippets:")
         for row_num, filepath in updates_made:
             print(f"  Row {row_num}: {filepath}")
+
+    if skipped_missing:
+        print(f"\nSkipped {len(skipped_missing)} rows due to missing source files:")
+        for row_num, title in skipped_missing:
+            print(f"  Row {row_num}: '{title}'")
 
 
 def run_gcloud_auth():
