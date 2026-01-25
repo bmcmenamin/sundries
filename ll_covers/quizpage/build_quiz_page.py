@@ -139,6 +139,7 @@ def generate_question_html(question: dict, base_url: str) -> str:
     qtitle = question.get("question_title", f"Question {qnum}")
     audiofiles = question.get("audiofiles", [])
     answer = question.get("answer_text", "")
+    notes = question.get("notes", "")
 
     # Audio players (or "media missing" message)
     if not audiofiles:
@@ -161,6 +162,19 @@ def generate_question_html(question: dict, base_url: str) -> str:
     # Escape the title for use in JavaScript string
     qtitle_js = qtitle.replace("\\", "\\\\").replace("'", "\\'")
 
+    # Optional notes section (only if notes exist)
+    notes_html = ""
+    if notes:
+        notes_html = f'''
+        <div class="notes-section">
+            <button class="spoiler-toggle notes-toggle" onclick="toggleSpoiler(this)">
+                Show Notes from Brenton
+            </button>
+            <div class="spoiler-content hidden">
+                <p class="notes">{escape(notes)}</p>
+            </div>
+        </div>'''
+
     return f'''
     <div class="question" data-question-number="{qnum}" data-question-title="{escape(qtitle)}">
         <h3>{qnum}.&nbsp;{escape(qtext)}</h3>
@@ -177,7 +191,7 @@ def generate_question_html(question: dict, base_url: str) -> str:
                 <p class="answer">{escape(answer)}</p>
             </div>
         </div>
-
+        {notes_html}
         <div class="feedback-section">
             <label for="feedback-{qnum}">Feedback:</label>
             <input type="text"
@@ -303,6 +317,26 @@ header h1 {
     color: var(--primary-color);
     margin: 0;
     text-transform: uppercase;
+}
+
+/* Notes section */
+.notes-section {
+    margin-top: 10px;
+}
+
+.notes-toggle {
+    background-color: #8e44ad;
+}
+
+.notes-section .spoiler-content {
+    background-color: #f5eef8;
+    border-left-color: #8e44ad;
+}
+
+.notes {
+    color: var(--text-color);
+    margin: 0;
+    font-style: italic;
 }
 
 /* Feedback section */

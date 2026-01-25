@@ -102,6 +102,7 @@ def read_songs(spreadsheet) -> list[dict]:
     cover_year_idx = get_idx('cover_year')
     original_artist_idx = get_idx('original_artist')
     cover_artist_idx = get_idx('cover_artist')
+    notes_idx = get_idx('Notes')
 
     if title_idx is None:
         print("ERROR: 'Song title' column not found in songs tab!")
@@ -128,6 +129,7 @@ def read_songs(spreadsheet) -> list[dict]:
             'cover_year': get_val(cover_year_idx),
             'original_artist': get_val(original_artist_idx),
             'cover_artist': get_val(cover_artist_idx),
+            'notes': get_val(notes_idx),
         }
 
         if song['title']:
@@ -234,6 +236,7 @@ def build_config():
             'question_text': f"Original: {song['original_year']}; Cover: {song['cover_year']}",
             'audiofiles': audiofiles,  # Empty list means "media missing"
             'answer_text': f"{song['cover_artist']} (Original: {song['original_artist']})",
+            'notes': song['notes'],  # Optional notes from Brenton
         }
         questions.append(question)
 
