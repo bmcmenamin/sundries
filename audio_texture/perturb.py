@@ -8,8 +8,8 @@ Writes cache/perturb/<input>/<stem>/<uuid>.wav, with the parameters beside it as
 Each variant stacks up to three effects, every one driven by its own slow sine envelope so the stem glides between a lightly
 and a strongly modified version of itself, never reaching the original (the envelope has a floor):
 
-  pitch     tape-style, so pitch and speed move together: a constant shift of up to a semitone (any fraction of one), plus a
-            wobble of up to a fifth of a semitone as the envelope swings
+  pitch     tape-style, so pitch and speed move together: a constant shift of up to a quarter of a semitone (out of tune, not
+            another key), plus a wobble of up to 0.15 of a semitone as the envelope swings
   comb      the stem plus a copy of itself delayed by a fraction of a millisecond to a few, the delay swept by the envelope
             (a flanger / phaser sweep)
   sideband  single-sideband frequency shift by 10-60 Hz, swept by the envelope, partly mixed in: the inharmonic,
@@ -35,9 +35,9 @@ from paths import Stem, cache_dir, new_sample_path, stems_of
 
 CACHE_KIND = "perturb"
 RATE = codec.CODEC_RATE
-PERIOD_RANGE = (1.5, 20.0)  # seconds, drawn log-uniformly
-PITCH_RANGE = (-1.0, 1.0)  # constant shifts, in semitones, any value between (microtonal included)
-WOBBLE_RANGE = (0.05, 0.2)  # semitones
+PERIOD_RANGE = (1.0, 12.0)  # seconds, drawn log-uniformly
+PITCH_RANGE = (-0.25, 0.25)  # constant shifts, in semitones, any value between: out of tune, not another key
+WOBBLE_RANGE = (0.05, 0.15)  # semitones
 COMB_GAIN_RANGE = (0.05, 0.15)
 COMB_SWEEP_MS = (0.5, 2.0)  # how far the delay is swept above its low end
 SHIFT_HZ_RANGE = (10.0, 60.0)
@@ -85,7 +85,7 @@ def analytic(audio: torch.Tensor) -> torch.Tensor:
 class Perturbation:
     """Zero for an amount means that effect is off."""
 
-    semitones: float  # constant pitch shift over the whole file (a semitone at most), signed, not restricted to whole semitones
+    semitones: float  # constant pitch shift over the whole file (a quarter of a semitone at most), signed, not restricted to whole semitones
     wobble: float  # peak deviation from it, in semitones, as the sine envelope swings (under a half step); 0 = pitch off
     pitch: Envelope
     comb_gain: float  # signed
@@ -133,7 +133,7 @@ class Perturbation:
         return audio + self.comb_gain * sample_at(audio, torch.arange(len(audio)) - delay)
 
     def _pitch(self, audio: torch.Tensor) -> torch.Tensor:
-        n = int(len(audio) * 1.2)  # the slowest rate (about -2.5 semitones) needs about 1.14x as many output samples
+        n = int(len(audio) * 1.1)  # the slowest rate (about -0.35 semitones) needs about 1.02x as many output samples
         out_t = torch.arange(n) / RATE
         rate = torch.exp2((self.semitones + self.wobble * (2 * self.pitch.at(out_t) - 1)) / 12)
         positions = torch.cumsum(rate, 0)

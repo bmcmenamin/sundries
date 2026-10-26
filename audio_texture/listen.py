@@ -22,15 +22,17 @@ from pathlib import Path
 from paths import CODEC_TEXTURE, DEMUCS_STEP, OUT_ROOT, SEPARATION, STEM_FILE, cache_dir, input_name
 
 ROOT = OUT_ROOT / CODEC_TEXTURE
+CLIP_INPUT = re.compile(r"__c\d+$")  # the scratch inputs song.py cuts a song into
 PAGE = ROOT / "compare.html"
 INPUTS = Path(__file__).parent / "inputs"
 MIX_TAG = re.compile(
-    r"^02_mix_(?P<tag>k(?P<components>\d+)_.+_m(?P<manifold>[\d.]+?)(?:w(?P<window>\d+))?"
-    r"(?:_x(?P<modulation>[\d.]+))?(?:_t(?P<tolerance>[\d.]+))?(?:_f(?P<floor>[\d.]+))?(?:_g(?P<augment>\d+)(?P<effects>[PCS]*))?(?:_s(?P<share>[\d.]+))?(?:_L(?P<long_window>\d+)t(?P<long_tolerance>[\d.]+))?(?:_T(?P<takes>[\d.]+-[\d.]+))?(?:_r(?P<rhythm>[\d.]+))?(?:_a(?P<activity>[\d.]+))?(?:_j(?P<joint>[\d.]+))?"
+    r"^02_mix_(?P<tag>k(?P<components>\d+)_[a-z0-9]+_(?P<lags>[a-z]+)_m(?P<manifold>[\d.]+?)(?:w(?P<window>\d+))?"
+    r"(?:_x(?P<modulation>[\d.]+))?(?:_t(?P<tolerance>[\d.]+))?(?:_f(?P<floor>[\d.]+))?(?:_g(?P<augment>\d+)(?P<effects>[PCS]*))?(?:_s(?P<share>[\d.]+))?(?:_L(?P<long_window>\d+)t(?P<long_tolerance>[\d.]+))?(?:_T(?P<takes>[\d.]+-[\d.]+))?(?:_r(?P<rhythm>[\d.]+))?(?:_ld(?P<loudness>[\d.]+))?(?:_cx(?P<cross>[\d.]+))?(?:_a(?P<activity>[\d.]+))?(?:_j(?P<joint>[\d.]+))?"
     r"(?:_i(?P<ica>[\d.]+))?(?:_d(?P<dynamics>[\d.]+))?)$"
 )
 FIELDS = (  # (attribute, name shown in a row label)
     ("components", "k"),
+    ("lags", "lags"),
     ("manifold", "m"),
     ("window", "w"),
     ("modulation", "mod"),
@@ -43,6 +45,8 @@ FIELDS = (  # (attribute, name shown in a row label)
     ("long_tolerance", "long hinge"),
     ("takes", "takes s"),
     ("rhythm", "rhythm"),
+    ("loudness", "loud"),
+    ("cross", "cross"),
     ("activity", "act"),
     ("joint", "joint"),
     ("ica", "ica"),
@@ -54,6 +58,7 @@ FIELDS = (  # (attribute, name shown in a row label)
 class Variant:
     tag: str
     components: int
+    lags: str
     manifold: float
     window: int
     modulation: float
@@ -66,6 +71,8 @@ class Variant:
     long_tolerance: float
     takes: str
     rhythm: float
+    loudness: float
+    cross: float
     activity: float
     joint: float
     ica: float
@@ -77,6 +84,7 @@ class Variant:
         return match and cls(
             match["tag"],
             int(match["components"]),
+            match["lags"],
             float(match["manifold"]),
             int(match["window"] or 1),
             float(match["modulation"] or 0),
@@ -89,6 +97,8 @@ class Variant:
             float(match["long_tolerance"] or 0),
             match["takes"] or "",
             float(match["rhythm"] or 0),
+            float(match["loudness"] or 0),
+            float(match["cross"] or 0),
             float(match["activity"] or 0),
             float(match["joint"] or 0),
             float(match["ica"] or 0),
@@ -149,6 +159,17 @@ def row_html(variant: Variant, source: str, varying: tuple[tuple[str, str], ...]
     mixes = sorted((ROOT / f"02_mix_{variant.tag}" / source).glob("*.wav"))
     cells = "".join(sample_html(Sample.of(variant, source, mix), label) for mix in mixes)
     return f'<tr><th title="{escape(variant.tag)}">{variant.label_html(varying) or escape(label)}</th><td><div class="samples">{cells}</div></td></tr>'
+
+
+def songs_html() -> str:
+    """Whole songs stitched from clips (song.py), each with its stems folded."""
+
+    def one(wav: Path) -> str:
+        stems = "".join(player(p, p.stem) for p in sorted(wav.with_name(f"{wav.stem}_stems").glob("*.wav")))
+        return f"{player(wav, wav.parent.name)}<details><summary>stems</summary><div class='reference'>{stems}</div></details>"
+
+    wavs = sorted((ROOT / "04_song").glob("*/*.wav"))
+    return f'<details open><summary>whole songs ({len(wavs)})</summary>{"".join(map(one, wavs))}</details>' if wavs else ""
 
 
 def reference_html(source: str) -> str:
@@ -232,9 +253,9 @@ document.getElementById('expand').onclick = () => { inputs.forEach(d => d.open =
 
 def main() -> None:
     variants = [v for v in map(Variant.from_mix_folder, sorted(ROOT.glob("02_mix_*"))) if v]
-    sources = sorted({p.name for v in variants for p in (ROOT / f"02_mix_{v.tag}").iterdir() if p.is_dir()})
+    sources = sorted({p.name for v in variants for p in (ROOT / f"02_mix_{v.tag}").iterdir() if p.is_dir() and not CLIP_INPUT.search(p.name)})
     varying = varying_fields(variants)
-    sections = "".join(section_html(source, variants, varying) for source in sources)
+    sections = songs_html() + "".join(section_html(source, variants, varying) for source in sources)
     PAGE.write_text(
         f"<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
         f"<title>Codec texture samples</title><style>{STYLE}</style></head><body>"
