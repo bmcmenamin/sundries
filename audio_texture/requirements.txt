@@ -1,0 +1,6 @@
+numpy
+scipy
+torch
+demucs
+encodec
+torchaudio
