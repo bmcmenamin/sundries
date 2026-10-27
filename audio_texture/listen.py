@@ -22,7 +22,7 @@ from pathlib import Path
 from paths import CODEC_TEXTURE, DEMUCS_STEP, OUT_ROOT, SEPARATION, STEM_FILE, cache_dir, input_name
 
 ROOT = OUT_ROOT / CODEC_TEXTURE
-CLIP_INPUT = re.compile(r"__c\d+$")  # the scratch inputs song.py cuts a song into
+CLIP_INPUT = re.compile(r"__c\d+$")  # the scratch inputs the old song.py cut a song into
 PAGE = ROOT / "compare.html"
 INPUTS = Path(__file__).parent / "inputs"
 MIX_TAG = re.compile(
@@ -162,7 +162,7 @@ def row_html(variant: Variant, source: str, varying: tuple[tuple[str, str], ...]
 
 
 def songs_html() -> str:
-    """Whole songs stitched from clips (song.py), each with its stems folded."""
+    """Whole songs stitched from clips (texture.py sample), each with its stems folded."""
 
     def one(wav: Path) -> str:
         stems = "".join(player(p, p.stem) for p in sorted(wav.with_name(f"{wav.stem}_stems").glob("*.wav")))

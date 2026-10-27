@@ -1,9 +1,5 @@
-"""Perturbed copies of a stem: material that sounds like the stem but is not its waveform.
-
-    venv/bin/python perturb.py jack_2 --n 64          # every stem of jack_2
-    venv/bin/python perturb.py jack_2 --stems vocals --n 16 --seed 1
-
-Writes cache/perturb/<input>/<stem>/<uuid>.wav, with the parameters beside it as <uuid>.json.
+"""Perturbed copies of a stem: material that sounds like the stem but is not its waveform. A library, used when a song
+is profiled (texture_profile.py); the copies are made and encoded in memory, never written out.
 
 Each variant stacks up to three effects, every one driven by its own slow sine envelope so the stem glides between a lightly
 and a strongly modified version of itself, never reaching the original (the envelope has a floor):
@@ -20,20 +16,14 @@ The variants are encoded and added to the manifold the generator pulls toward (s
 
 from __future__ import annotations
 
-import argparse
-import json
 import math
 import random
-from dataclasses import asdict, dataclass
-from pathlib import Path
+from dataclasses import dataclass
 
 import torch
-from scipy.io import wavfile
 
 import codec
-from paths import Stem, cache_dir, new_sample_path, stems_of
 
-CACHE_KIND = "perturb"
 RATE = codec.CODEC_RATE
 PERIOD_RANGE = (1.0, 12.0)  # seconds, drawn log-uniformly
 PITCH_RANGE = (-0.25, 0.25)  # constant shifts, in semitones, any value between: out of tune, not another key
@@ -140,32 +130,3 @@ class Perturbation:
         return sample_at(audio, positions[positions < len(audio) - 1])
 
 
-def effects_of(wav: Path) -> str:
-    """Which effects a saved copy has on, as letters: P itch, C omb, S ideband."""
-    p = json.loads(wav.with_suffix(".json").read_text())
-    return "".join(letter for letter, on in (("P", p["wobble"]), ("C", p["comb_gain"]), ("S", p["shift_hz"])) if on)
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("source", help="input name, a folder under out/separation/01_demucs/")
-    parser.add_argument("--stems", nargs="+", help="stems to perturb (default: all)")
-    parser.add_argument("--n", type=int, default=64, help="variants per stem")
-    parser.add_argument("--floor", type=float, default=0.25, help="lowest strength of any effect, as a share of its peak")
-    parser.add_argument("--seed", type=int, default=0)
-    args = parser.parse_args()
-
-    for stem in (s for s in stems_of(args.source) if not args.stems or s.name in args.stems):
-        audio = codec.load(stem.path)
-        directory = cache_dir(CACHE_KIND, args.source, stem.name)
-        rng = random.Random(f"{args.seed}/{args.source}/{stem.name}")
-        for _ in range(args.n):
-            perturbation = Perturbation.random(rng, args.floor)
-            path = new_sample_path(directory)
-            wavfile.write(path, RATE, (perturbation.apply(audio) * 32767).round().clamp(-32767, 32767).short().numpy())
-            path.with_suffix(".json").write_text(json.dumps(asdict(perturbation)))
-        print(f"{stem.source}/{stem.name}: {args.n} variants in {directory}")
-
-
-if __name__ == "__main__":
-    main()

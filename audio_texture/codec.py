@@ -31,11 +31,15 @@ def model() -> EncodecModel:
     return codec.eval()
 
 
-def load(path: Path) -> torch.Tensor:
+def normalise(audio: torch.Tensor) -> torch.Tensor:
     """Mono audio at CODEC_RATE, scaled to TARGET_RMS and trimmed to whole latent frames."""
-    audio = decode_mono(path, CODEC_RATE)
     audio = audio / audio.pow(2).mean().sqrt() * TARGET_RMS
     return audio[: audio.numel() // HOP * HOP]
+
+
+def load(path: Path) -> torch.Tensor:
+    """`normalise` of a file."""
+    return normalise(decode_mono(path, CODEC_RATE))
 
 
 @torch.no_grad()

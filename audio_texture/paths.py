@@ -9,8 +9,8 @@
   sort is creation order; needs Python 3.14+). Deterministic
   artifacts (a separated stem, a dictionary) keep fixed names.
 
-Intermediates that can be regenerated live apart from the outputs, under cache/{kind}/{input}/{stem?}/ (see `cache_dir`):
-  perturb      <uuid>.{wav,json,latents.pt}   perturbed copies of a stem (perturb.py) and their EnCodec latents
+Intermediates that can be regenerated live apart from the outputs, under cache/{kind}/{input}/{stem?}/ (see `cache_dir`).
+A song's measurements live in profiles/<input>.texture (see texture_profile.py): `texture.py sample` reads only that.
 
 Pipelines and their steps:
   separation   01_demucs                      <input>/<stem>/stem.wav
@@ -48,6 +48,7 @@ from pathlib import Path
 
 OUT_ROOT = Path(__file__).parent / "out"
 CACHE_ROOT = Path(__file__).parent / "cache"
+PROFILE_ROOT = Path(__file__).parent / "profiles"  # one <input>.texture per song (texture_profile.py)
 
 SEPARATION = "separation"
 SPECTRAL = "spectral"

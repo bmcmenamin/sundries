@@ -2,3 +2,5 @@ venv/
 out*/
 __pycache__/
 cache/
+profiles/
+inputs/

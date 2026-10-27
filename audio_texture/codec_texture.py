@@ -1,7 +1,5 @@
-"""Per-stem texture synthesis in a pretrained codec's latent space, by matching statistics.
-
-    venv/bin/python codec_texture.py walk_1                       # every audible stem
-    venv/bin/python codec_texture.py walk_1 --stems piano guitar
+"""Per-stem texture synthesis in a pretrained codec's latent space, by matching statistics. A library: texture.py is
+the command line (`profile` a song once, then `sample` new versions of it).
 
 Per stem:
   1. encode the separated stem with EnCodec (codec.py): 128 latent channels at 75 Hz
@@ -34,22 +32,13 @@ Per stem:
      the other side: runs closer than that are pushed away, since the closest ones are literal replays (waveform
      matches of 0.8 and above all had distances below about 0.3 of the source's novelty)
   5. invert the PCA and decode with the codec
-Stems are written at their own relative loudness with one shared gain, so a set of stems mixes the way the source did:
-  out/codec_texture/01_generate_<tag>/<input>/<stem>/<uuid>.{wav,pt}   (same <uuid> for the stems of one set; .pt = the
-                                                                       synthesised PCA coefficients)
-  out/codec_texture/02_mix_<tag>/<input>/<uuid>.wav               (their sum)
 """
 
 from __future__ import annotations
 
-import argparse
 import math
-import random
-import uuid
-from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
-from functools import lru_cache, partial
-from pathlib import Path
+from functools import lru_cache
 
 import torch
 import torch.nn.functional as F
@@ -57,10 +46,7 @@ import torchaudio.functional as AF
 from scipy.io import wavfile
 
 import codec
-from paths import CODEC_TEXTURE, cache_dir, step_dir, stems_of
-from perturb import CACHE_KIND as PERTURB_CACHE, effects_of
-from synthesize import OUTPUT_PEAK, decode_mono
-from synthesize_stems import stem_levels
+from synthesize import decode_mono
 
 LAG_SETS = {
     "sparse": (1, 3, 9, 27, 81),  # 13 ms ... 1.1 s at 75 Hz
@@ -241,7 +227,7 @@ def loudness_curve(latents: torch.Tensor) -> torch.Tensor:
     return _smooth((log - log.mean()) / (log.std() + 1e-6))
 
 
-def _cross_correlation(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
+def cross_correlation(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
     """(len(CROSS_LAGS),): correlation of `a` at time t + lag with `b` at t, over the frames both cover. Positive lags: `a`
     follows `b`."""
     a, b = (s - s.mean() for s in (a, b))
@@ -258,7 +244,7 @@ class Partner:
     correlation: torch.Tensor  # (len(CROSS_LAGS),): the source's cross-correlation of the two stems' loudness curves
 
     def penalty(self, basis: Basis, x: torch.Tensor) -> torch.Tensor:
-        return (_cross_correlation(loudness_curve(basis.decode(x)), self.curve) - self.correlation).pow(2).mean()
+        return (cross_correlation(loudness_curve(basis.decode(x)), self.curve) - self.correlation).pow(2).mean()
 
 
 @dataclass(frozen=True)
@@ -477,23 +463,6 @@ def choose_takes(frames: int, window: int, clips: int, seconds: tuple[float, flo
     return torch.randint(0, clips, (int(stretch.max()) + 1,), generator=generator)[stretch]
 
 
-def perturbed_latents(source: str, stem: str, count: int, effects: str = "") -> list[torch.Tensor]:
-    """EnCodec latents of the first `count` perturbed copies of a stem (made by perturb.py) whose set of effects is exactly
-    `effects` (letters, see `effects_of`; any when empty); encoded once, then cached."""
-    every = sorted(cache_dir(PERTURB_CACHE, source, stem).glob("*.wav"))
-    paths = [p for p in every if not effects or set(effects_of(p)) == set(effects)][:count]
-    if len(paths) < count:
-        raise SystemExit(f"{source}/{stem}: asked for {count} perturbed copies{f' with effects {effects}' if effects else ''}, found {len(paths)} (run perturb.py)")
-
-    def latents(path) -> torch.Tensor:
-        cache = path.with_name(path.stem + ".latents.pt")
-        if not cache.exists():
-            torch.save(codec.encode(codec.load(path)), cache)
-        return torch.load(cache)
-
-    return [latents(p) for p in paths]
-
-
 def pooled(original: torch.Tensor, variants: list[torch.Tensor], k: int, original_share: float):
     """Arguments of `Basis.fit` for the original plus its copies: the original's frames hold `original_share` of the weight."""
     if not variants:
@@ -676,175 +645,3 @@ def parse_trim(items: list[str]) -> dict[str, float]:
 def save(path, audio: torch.Tensor, gain: float) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     wavfile.write(path, codec.CODEC_RATE, (audio * gain * 32767).round().clamp(-32767, 32767).short().numpy())
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("source", help="input name, a folder under out/separation/01_demucs/")
-    parser.add_argument("--stems", nargs="+", help="stems to synthesise (default: all audible)")
-    parser.add_argument("--min-db", type=float, default=-25.0, help="skip stems this far below the mix")
-    parser.add_argument("--components", type=int, default=64)
-    parser.add_argument("--lags", choices=list(LAG_SETS), default="dense", help="timescales of the motion and speed histograms")
-    parser.add_argument("--manifold", type=float, default=0.3, help="weight of the nearest-source-run distance (0 = off)")
-    parser.add_argument("--tolerance", type=float, default=0.0,
-                        help="hinge: runs closer to the source than this many times the source's own novelty cost nothing "
-                             "(0 = every bit of distance counts, which pulls runs onto the source)")
-    parser.add_argument("--modulation", type=float, default=1.0, help="weight of the cross-spectral matrix of component energy envelopes (0 = off)")
-    parser.add_argument("--activity", type=float, default=0.0,
-                        help="weight of the distribution (on a log scale) of the speed averaged over 0.25 s ... 4 s: how long "
-                             "it stays active or still, so phrase and pause lengths, and how many attacks there are (0 = off)")
-    parser.add_argument("--joint", type=float, default=0.0,
-                        help="weight of the joint distribution of the leading components, matched along random "
-                             "projections (0 = off)")
-    parser.add_argument("--long-window", type=int, default=0,
-                        help="a second, longer window for the manifold term, with its own --long-tolerance as a ceiling only "
-                             "(0 = off). Use with a short --window: the short one keeps every piece close to a real piece "
-                             "(clean audio, no replayed words), the long one keeps the trajectory plausible over a syllable "
-                             "or more (not busy)")
-    parser.add_argument("--long-tolerance", type=float, default=1.0,
-                        help="ceiling of the long window, in multiples of the source's novelty at that window")
-    parser.add_argument("--take-seconds", type=float, nargs=2, metavar=("MIN", "MAX"),
-                        help="with --augment, cut each sample's timeline into stretches of random length in this range (seconds) "
-                             "and let each stretch be pulled toward one perturbed copy only, so the copies are not blended")
-    parser.add_argument("--search-dims", type=int, default=128,
-                        help="with --augment, find nearest runs in a sketch of this many dimensions, then settle among the best few "
-                             "exactly (much faster on 64 copies); 0 = exact search")
-    parser.add_argument("--loudness", type=float, default=0.0,
-                        help="weight of matching the stem's frame loudness (read from the latent norm): its histogram, so quiet "
-                             "stretches keep their share, and how it switches between loud and quiet")
-    parser.add_argument("--cross", type=float, default=0.0,
-                        help="weight of making stems loud and quiet together (or in alternation) as they are in the source: the stems "
-                             "are generated one after another in a random order per sample, and each is matched to the loudness "
-                             "of those before it")
-    parser.add_argument("--rhythm", type=float, default=0.0,
-                        help="weight of the pacing of the leading (loudness) component: how often it switches between "
-                             "active and resting and how long stretches and rests last, at three levels (0 = off). Every stem")
-    parser.add_argument("--augment", type=int, default=0,
-                        help="number of perturbed copies of each stem (from perturb.py) to use: the PCA is fitted on the "
-                             "original plus the copies, and the manifold term pulls toward the copies only, never the original "
-                             "(0 = the original alone is the manifold)")
-    parser.add_argument("--augment-effects", default="", choices=["", "P", "C", "S", "PC", "PS", "CS", "PCS"],
-                        help="use only the copies whose effects are exactly these (P itch, C omb, S ideband); any when empty")
-    parser.add_argument("--original-share", type=float, default=0.5,
-                        help="with --augment, the share of the PCA's weight held by the original's frames (so it stays "
-                             "reconstructable); the copies share the rest equally")
-    parser.add_argument("--short-share", type=float, default=1.0,
-                        help="share of the short window's (non-overlapping) runs that are pulled toward the source, chosen "
-                             "at random per sample; 1 = every frame. Below 1 the long window can't tighten every piece into a copy")
-    parser.add_argument("--floor", type=float, default=0.0,
-                        help="the other side of the band: runs closer to the source than this many times the source's own "
-                             "novelty are pushed away (0 = off). Real waveform-level matches live below about 0.3. "
-                             "Must not exceed --tolerance")
-    parser.add_argument("--dynamics", type=float, default=0.0,
-                        help="weight of the joint distribution of position and velocity of the leading components, "
-                             "along random projections: how fast it moves where (0 = off)")
-    parser.add_argument("--ica", type=float, default=0.0,
-                        help="weight of the distribution of the values and changes along an overcomplete set of ICA "
-                             "axes of the source (0 = off)")
-    parser.add_argument("--window", type=int, default=24, help="frames per run compared with the source in the manifold term (1 = single frames)")
-    parser.add_argument("--init", choices=["shuffle", "chain"], default="shuffle", help="how the optimisation starts")
-    parser.add_argument("--seconds", type=float, default=10.0)
-    parser.add_argument("--trim", nargs="*", default=[], metavar="STEM=DB",
-                        help="turn a stem up or down in the mix, in dB (e.g. guitar=-4); stems are matched to their source's "
-                             "loudness (LUFS) first")
-    parser.add_argument("--lead-from", type=Path, metavar="DIR",
-                        help="continue a previous clip of a song: start from the tail of the latents it saved in DIR "
-                             "(<stem>.pt, see --latents-dir) and hold to them for --lead-seconds")
-    parser.add_argument("--lead-seconds", type=float, default=2.0)
-    parser.add_argument("--lead-weight", type=float, default=5.0, help="weight of holding to the lead, against the statistics")
-    parser.add_argument("--latents-dir", type=Path, metavar="DIR",
-                        help="also save each stem's generated latents there as <stem>.pt (the next clip's --lead-from)")
-    parser.add_argument("--name", help="file name for the sample instead of a fresh uuid (with --n 1)")
-    parser.add_argument("--iters", type=int, default=400)
-    parser.add_argument("--decode", choices=["continuous", "snapped6", "snapped24"], default="continuous",
-                        help="decode the latents as they are, or snapped to the codec's quantiser grid at 6 / 24 kbps")
-    parser.add_argument("--n", type=int, default=2)
-    parser.add_argument("--jobs", type=int, default=0,
-                        help="samples made at the same time, each in its own process with the cores shared between them "
-                             "(0 = all of --n, up to the performance cores): the threads of one process scale poorly")
-    parser.add_argument("--seed", type=int, default=0)
-    args = parser.parse_args()
-    if args.floor > args.tolerance:
-        parser.error("--floor must not exceed --tolerance")
-
-    stems = stems_of(args.source)
-    report = stem_levels(stems)
-    kept = [s for s in stems if report[s.name][1] >= args.min_db and (args.stems is None or s.name in args.stems)]
-    tag = f"k{args.components}_{args.decode}_{args.lags}_m{args.manifold:g}" + (f"w{args.window}" if args.window > 1 else "") + (f"_x{args.modulation:g}" if args.modulation else "") + (f"_t{args.tolerance:g}" if args.tolerance else "") + (f"_f{args.floor:g}" if args.floor else "") + (f"_g{args.augment}{args.augment_effects}" if args.augment else "") + (f"_s{args.short_share:g}" if args.short_share < 1 else "") + (f"_L{args.long_window}t{args.long_tolerance:g}" if args.long_window else "") + (f"_T{args.take_seconds[0]:g}-{args.take_seconds[1]:g}" if args.take_seconds else "") + (f"_r{args.rhythm:g}" if args.rhythm else "") + (f"_ld{args.loudness:g}" if args.loudness else "") + (f"_cx{args.cross:g}" if args.cross else "") +(f"_a{args.activity:g}" if args.activity else "") + (f"_j{args.joint:g}" if args.joint else "") + (f"_i{args.ica:g}" if args.ica else "") + (f"_d{args.dynamics:g}" if args.dynamics else "") + ("" if args.init == "shuffle" else f"_{args.init}")
-    frames = round(args.seconds * codec.CODEC_RATE / codec.HOP)
-    trim = parse_trim(args.trim)
-    loud = {s.name: stem_loudness(s.path) for s in kept}  # each stem's loudness in the source, which its sample is matched to
-    print("  source loudness (LUFS): " + ", ".join(f"{name} {value:.1f}" for name, value in loud.items()), flush=True)
-    sources: dict[str, tuple[Basis, torch.Tensor, list[torch.Tensor] | None, torch.Tensor]] = {}  # basis, coefficients, copies, loudness curve
-    for stem in kept:
-        latents = codec.encode(codec.load(stem.path))
-        variants = perturbed_latents(args.source, stem.name, args.augment, args.augment_effects)
-        basis = Basis.fit(*pooled(latents, variants, args.components, args.original_share))
-        error = lambda b: float((b.decode(b.encode(latents)) - latents).pow(2).sum() / (latents - latents.mean(1, keepdim=True)).pow(2).sum())
-        if variants:
-            print(f"  {stem.name}: {len(variants)} perturbed copies; original's PCA reconstruction error {error(basis):.3f} "
-                  f"(own basis {error(Basis.fit(latents, args.components)):.3f})", flush=True)
-        sources[stem.name] = (basis, basis.encode(latents), [basis.encode(v) for v in variants] or None, loudness_curve(latents))
-
-    plan = Plan(args, tag, frames, tuple(kept), loud, trim, sources)
-    jobs = min(args.jobs or args.n, args.n)
-    if jobs == 1:
-        for i in range(args.n):
-            render(plan, i)
-        return
-    with ProcessPoolExecutor(jobs, initializer=torch.set_num_threads, initargs=(max(1, PERFORMANCE_CORES // jobs),)) as workers:
-        list(workers.map(partial(render, plan), range(args.n)))
-
-
-@dataclass(frozen=True)
-class Plan:
-    """Everything the samples of one run share; each sample is `render`ed from it (in this process or a worker)."""
-
-    args: argparse.Namespace
-    tag: str
-    frames: int
-    kept: tuple  # the stems to make
-    loud: dict[str, float]  # each stem's loudness in the source (LUFS)
-    trim: dict[str, float]
-    sources: dict[str, tuple[Basis, torch.Tensor, list[torch.Tensor] | None, torch.Tensor]]  # basis, coefficients, copies, loudness curve
-
-
-def render(plan: Plan, i: int) -> None:
-    """Make sample `i`: the stems one after another (in a random order with --cross), their mix, and write them out."""
-    args, kept, sources = plan.args, plan.kept, plan.sources
-    snap = {"continuous": lambda z: z, "snapped6": codec.snap, "snapped24": lambda z: codec.snap(z, 24.0)}[args.decode]
-    lead_frames = round(args.lead_seconds * FRAME_RATE)
-
-    def lead_for(stem: str) -> Lead | None:
-        path = args.lead_from / f"{stem}.pt" if args.lead_from else None
-        return Lead(torch.load(path)[:, -lead_frames:], args.lead_weight) if path and path.exists() else None
-
-    name = f"{args.name or uuid.uuid7().hex}.wav"
-    rendered = {}
-    generated: dict[str, torch.Tensor] = {}  # loudness curves of the stems made so far in this sample
-    order = random.Random(f"{args.seed}/{i}").sample(list(kept), len(kept)) if args.cross else kept  # no stem type always goes first
-    for stem in order:
-        k = kept.index(stem)
-        print(f"  sample {i + 1}/{args.n}  {stem.name}", flush=True)
-        basis, coefficients, pool, curve = sources[stem.name]
-        partners = tuple(Partner(made, _cross_correlation(curve, sources[other][3])) for other, made in generated.items()) if args.cross else ()
-        new = synthesise(coefficients, plan.frames, args.iters, args.seed + 100 * i + k, LAG_SETS[args.lags], args.manifold, args.init, args.modulation, args.window, args.tolerance, args.activity, args.joint, args.ica, args.dynamics, args.floor, args.long_window, args.long_tolerance, args.short_share, pool, args.rhythm, tuple(args.take_seconds) if args.take_seconds else None, args.search_dims, basis, lead_for(stem.name), args.loudness, args.cross, partners)
-        generated[stem.name] = loudness_curve(basis.decode(new))
-        audio = codec.decode(snap(basis.decode(new)))
-        if args.latents_dir:
-            args.latents_dir.mkdir(parents=True, exist_ok=True)
-            torch.save(basis.decode(new), args.latents_dir / f"{stem.name}.pt")
-        rendered[stem.name] = audio * 10 ** ((plan.loud[stem.name] + plan.trim.get(stem.name, 0.0) - loudness(audio)) / 20)
-        coefficient_path = step_dir(CODEC_TEXTURE, f"01_generate_{plan.tag}", args.source, stem.name) / name
-        coefficient_path.parent.mkdir(parents=True, exist_ok=True)
-        torch.save(new, coefficient_path.with_suffix(".pt"))
-    mix = torch.stack(list(rendered.values())).sum(0)
-    gain = OUTPUT_PEAK / float(mix.abs().max())
-    for stem_name, audio in rendered.items():
-        save(step_dir(CODEC_TEXTURE, f"01_generate_{plan.tag}", args.source, stem_name) / name, audio, gain)
-    save(step_dir(CODEC_TEXTURE, f"02_mix_{plan.tag}", args.source) / name, mix, gain)
-    print(f"  {name}", flush=True)
-
-
-if __name__ == "__main__":
-    main()
