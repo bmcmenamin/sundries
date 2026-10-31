@@ -6,7 +6,7 @@
 
 `profile` separates the song (separate.py, once), cuts every stem into clips of about --clip-seconds, and keeps in a single
 file what sampling needs (texture_profile.py); nothing else is written. `sample` reads only that file. A version is made
-clip after clip: each clip is generated stem by stem in a random order (`--cross` ties the stems' loudness together),
+clip after clip: each clip is generated stem by stem in a random order,
 runs --overlap seconds into the next clip's time, and the next clip starts from, and is held to, the latents the previous
 one ended with. Every clip's length is drawn at random within --jitter of its source clip's, so a version is not exactly as
 long as the song. The clips are blended in codec latent space over their overlaps (a linear crossfade), decoded once, and
@@ -32,7 +32,7 @@ import torch
 import torch.nn.functional as F
 
 import codec
-from codec_texture import FRAME_RATE, LAG_SETS, PERFORMANCE_CORES, Lead, Partner, cross_correlation, loudness, loudness_curve, parse_trim, save, synthesise
+from codec_texture import FRAME_RATE, LAG_SETS, PERFORMANCE_CORES, Lead, Window, loudness, parse_trim, save, synthesise
 from paths import CODEC_TEXTURE, PROFILE_ROOT, input_name, new_sample_path, step_dir, stems_of
 from synthesize import OUTPUT_PEAK
 from texture_profile import ClipProfile, Profile
@@ -49,12 +49,16 @@ class Recipe:
     """How a version is generated. The defaults are the settings approved by ear."""
 
     iters: int = 120
-    lags: str = "half"
-    manifold: float = 1.0
-    window: int = 48
-    take_seconds: tuple[float, float] = (2.0, 5.0)
-    loudness: float = 1.0
-    cross: float = 5.0
+    lags: str = "half"  # must be the set the profile was measured at (texture_profile.LAGS)
+    activity: float = 0.0  # weights of the optional statistics (a profile holds them all; a weight of 0 skips the sorting)
+    joint: float = 1.0
+    ica: float = 0.0
+    dynamics: float = 1.0
+    rhythm: float = 0.0
+    windowed: float = 1.0
+    positions: float = 0.0  # weights of the density terms (density.py): the synthesis kept as likely as the source's own frames
+    transitions: float = 0.0
+    audio: float = 0.0  # weight of the decoded audio's statistics (tfd.py: time-frequency, phase, loudness), matched in a short refinement stage
     overlap: float = 2.0  # seconds a clip's output runs into the next clip's time
     lead_weight: float = 5.0
     jitter: float = 0.1  # how far a clip's generated length may stray from its source clip's, as a share of it
@@ -91,21 +95,21 @@ def layout(profile: Profile, jitter: float, rng: random.Random) -> list[Slot]:
 
 
 def generate_clip(slot: Slot, previous: dict[str, torch.Tensor] | None, seed: int, recipe: Recipe) -> dict[str, torch.Tensor]:
-    """Stem name -> latents (LATENTS, frames) of one clip: the stems one after another in a random order, each matched to the
-    loudness of those before it, and the start held to the tail of `previous` (the clip before, same layout)."""
+    """Stem name -> latents (LATENTS, frames) of one clip: the stems one after another in a random order, and the start held
+    to the tail of `previous` (the clip before, same layout). Loudness, within a stem and between stems, is a property of the
+    waveform (`tfd`), not of the latents."""
     stems = slot.profile.stems
     names = list(stems)
     made: dict[str, torch.Tensor] = {}
     for name in random.Random(f"{seed}/{slot.index}").sample(names, len(names)):  # no stem type always goes first
         stem = stems[name]
-        partners = tuple(Partner(loudness_curve(made[o]), cross_correlation(stem.curve, stems[o].curve)) for o in made) if recipe.cross else ()
         lead = Lead(previous[name][:, -recipe.overlap_frames :], recipe.lead_weight) if previous and name in previous else None
         print(f"  clip {slot.index + 1}  {name}", flush=True)
-        new = synthesise(
-            stem.coefficients, slot.generated(recipe.overlap_frames), recipe.iters, seed * 100_000 + slot.index * 100 + names.index(name),
-            LAG_SETS[recipe.lags], recipe.manifold, "shuffle", 1.0, recipe.window, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 1.0,
-            pool=stem.pool(), takes=recipe.take_seconds, search_dims=128, basis=stem.basis, lead=lead,
-            loudness=recipe.loudness, cross=recipe.cross, partners=partners,
+        new = synthesise(  # no coefficients, no manifold term: the statistics in `stem.target` are all it knows of the source
+            None, slot.generated(recipe.overlap_frames), recipe.iters, seed * 100_000 + slot.index * 100 + names.index(name),
+            LAG_SETS[recipe.lags], 0.0, "shuffle", 1.0, 0, 0.0, recipe.activity, recipe.joint, recipe.ica, recipe.dynamics, 0.0, 0, 1.0,
+            rhythm=recipe.rhythm, basis=stem.basis, lead=lead, target=stem.target, windowed=recipe.windowed,
+            positions=recipe.positions, transitions=recipe.transitions, audio=recipe.audio,
         )
         made[name] = stem.basis.decode(new)
     return made
@@ -198,7 +202,8 @@ def profile_command(args: argparse.Namespace) -> None:
     song = input_name(args.input)
     if not stems_of(song):
         subprocess.run([sys.executable, "separate.py", str(args.input)], check=True, cwd=HERE)
-    profile = Profile.build(song, args.clip_seconds, args.copies, args.components, args.original_share, args.seed, args.clips)
+    window = Window(args.window_frames, args.window_projections, args.window_components)
+    profile = Profile.build(song, args.clip_seconds, args.copies, args.components, args.original_share, args.seed, args.clips, window, args.independent)
     path = args.output or PROFILE_ROOT / f"{song}.texture"
     profile.save(path)
     print(f"{path}  ({path.stat().st_size / 1e6:.0f} MB, {len(profile.clips)} clips)")
@@ -206,7 +211,9 @@ def profile_command(args: argparse.Namespace) -> None:
 
 def sample_command(args: argparse.Namespace) -> None:
     recipe = Recipe(
-        iters=args.iters, loudness=args.loudness, cross=args.cross, overlap=args.overlap, jitter=args.jitter,
+        iters=args.iters, overlap=args.overlap, jitter=args.jitter,
+        activity=args.activity, joint=args.joint, ica=args.ica, dynamics=args.dynamics, rhythm=args.rhythm,
+        windowed=args.windowed, positions=args.positions, transitions=args.transitions, audio=args.audio,
     )
     trim = parse_trim(args.trim)
     jobs = min(args.jobs or args.n, args.n, PERFORMANCE_CORES)
@@ -227,11 +234,15 @@ def main() -> None:
     profile.add_argument("input", type=Path, help="the song, e.g. inputs/Walk_Of_Life.mp3")
     profile.add_argument("--output", type=Path, help="where to write it (default: profiles/<input>.texture)")
     profile.add_argument("--clip-seconds", type=float, default=10.0)
-    profile.add_argument("--copies", type=int, default=32, help="perturbed copies of every stem clip (what the manifold term pulls toward)")
-    profile.add_argument("--components", type=int, default=64)
+    profile.add_argument("--copies", type=int, default=32, help="perturbed copies of every stem clip (they only shape the PCA basis; none is kept)")
+    profile.add_argument("--components", type=int, default=64, help="PCA components (with --independent: how many independent components)")
+    profile.add_argument("--independent", action="store_true", help="synthesise in the independent components of the PCA basis, not its axes")
     profile.add_argument("--original-share", type=float, default=0.5, help="the share of the PCA's weight held by the original's frames")
     profile.add_argument("--seed", type=int, default=0)
     profile.add_argument("--clips", type=int, help="only the first N clips (a quick test)")
+    profile.add_argument("--window-frames", type=int, default=Window.frames, help="frames in a run whose projections the windowed statistic matches")
+    profile.add_argument("--window-projections", type=int, default=Window.projections, help="random filters the windowed statistic matches")
+    profile.add_argument("--window-components", type=int, default=Window.components, help="leading components the windowed filters span")
     profile.set_defaults(run=profile_command)
 
     sample = commands.add_parser("sample", help="make new versions of a profiled song")
@@ -243,11 +254,11 @@ def main() -> None:
     sample.add_argument("--seed", type=int, default=0)
     sample.add_argument("--clips", type=int, help="only the first N clips (a quick listen)")
     sample.add_argument("--iters", type=int, default=Recipe.iters)
-    sample.add_argument("--loudness", type=float, default=Recipe.loudness, help="weight of matching each stem's frame loudness")
-    sample.add_argument("--cross", type=float, default=Recipe.cross, help="weight of making stems loud and quiet together as in the source")
     sample.add_argument("--overlap", type=float, default=Recipe.overlap, help="seconds each clip's output runs into the next clip's time")
     sample.add_argument("--jitter", type=float, default=Recipe.jitter,
                         help="each clip's length is its source clip's times a random factor within this of 1 (0 = the song's own length)")
+    for name in ("activity", "joint", "ica", "dynamics", "rhythm", "windowed", "positions", "transitions", "audio"):
+        sample.add_argument(f"--{name}", type=float, default=getattr(Recipe, name), help=f"weight of the {name} statistics (0 = leave out)")
     sample.add_argument("--drop", nargs="*", default=[], metavar="STEM", help="leave these stems out of the version entirely, e.g. --drop vocals")
     sample.add_argument("--trim", nargs="*", default=[], metavar="STEM=DB", help="turn a stem up or down in the mix, in dB")
     sample.set_defaults(run=sample_command)

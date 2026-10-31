@@ -21,6 +21,8 @@ Per stem:
                      depend on one another (bright only when loud), which separate histograms cannot say
        dynamics      position together with velocity (changes over 1 and 3 frames) of the leading components, along random
                      projections: how fast it moves where (a quiet state that stays still, a loud one that moves)
+       windowed      runs of 10 frames (0.13 s) of all the components along 256 random filters across components and
+                     time: which short trajectories (an attack and its decay) occur, not just which positions and steps
        ica           values and changes (lags 1, 3) along an overcomplete set of non-Gaussian axes of the source (FastICA,
                      3 random starts pooled): the heavy-tailed directions (attacks, fuzz) that PCA axes spread out
      histograms are compared as sorted values (1-D optimal transport), so the objective is deterministic
@@ -37,7 +39,7 @@ Per stem:
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from functools import lru_cache
 
 import torch
@@ -46,6 +48,8 @@ import torchaudio.functional as AF
 from scipy.io import wavfile
 
 import codec
+import tfd
+from density import FEATURES, Density
 from synthesize import decode_mono
 
 LAG_SETS = {
@@ -65,13 +69,13 @@ ACTIVITY_FLOOR = 0.02  # of the source's typical speed, added before the log so 
 JOINT_COMPONENTS = 8  # leading components whose joint distribution is matched
 JOINT_PROJECTIONS = 64
 ICA_RESTARTS = 3  # FastICA runs pooled into one overcomplete set of axes
-ICA_ITERS = 200
+ICA_ITERS = 500
+ICA_TOLERANCE = 1e-6
 ICA_LAGS = (1, 3)
 DYNAMICS_LAG = 3  # frames: the longer of the two velocities in the state-velocity joint
+AUDIO_ITERS = 30  # L-BFGS iterations of the refinement stage that adds the decoded audio's statistics
 PERFORMANCE_CORES = 4  # the fast cores of an M-series Air: more threads than this, or the slow cores, buy little
 SHORTLIST = 32  # candidates the sketch search hands to the exact comparison (see `WindowBank.of`)
-CROSS_LAGS = tuple(range(-150, 151, 5))  # frames (+-2 s): how far apart two stems' loud moments may be and still count as related
-LOUDNESS_FLOOR = 1e-3  # added to a frame's latent norm before the log, so a silent frame has a finite loudness
 RHYTHM_LEVELS = (0.25, 0.5, 0.75)  # quantiles of the leading component at which "active" is told from "resting"
 RHYTHM_LAGS = (1, 2, 4, 8, 16, 32, 64, 128, 256)  # frames: 13 ms ... 3.4 s
 RHYTHM_SMOOTHING = 19  # frames (0.25 s) averaged before telling active from resting
@@ -81,10 +85,13 @@ RHYTHM_CROSSING_SCALE = 10.0  # brings crossing rates (a few per hundred frames)
 
 @dataclass(frozen=True)
 class Basis:
-    """Latents ~ mean + components @ coefficients."""
+    """Latents ~ mean + components @ coefficients; coefficients = unmix @ (latents - mean). A PCA basis, or (`independent`) the
+    independent components of one. In the latter each coefficient is scaled to the signal variance it carries (not whitened to
+    unit variance), so the squared error of a coefficient is its squared error in the latents."""
 
     mean: torch.Tensor  # (LATENTS, 1)
-    components: torch.Tensor  # (LATENTS, k)
+    components: torch.Tensor  # (LATENTS, k): the mixing matrix
+    unmix: torch.Tensor  # (k, LATENTS)
 
     @classmethod
     def fit(cls, latents: torch.Tensor, k: int, weights: torch.Tensor | None = None) -> Basis:
@@ -93,10 +100,32 @@ class Basis:
         weights = weights / weights.sum()
         mean = (latents * weights).sum(1, keepdim=True)
         u, _, _ = torch.linalg.svd((latents - mean) * weights.sqrt(), full_matrices=False)
-        return cls(mean, u[:, :k])
+        return cls(mean, u[:, :k], u[:, :k].T)
+
+    def independent(self, latents: torch.Tensor) -> Basis:
+        """The same span with its axes replaced by the independent components (FastICA, on whitened coefficients) of `latents`,
+        a PCA basis's frames: each coefficient then has a heavy-tailed histogram where the source has bursts and no linear
+        dependence on the others, and the total variance is unchanged. Ordered by how much latent energy each carries,
+        signed so its long tail points up."""
+        c = self.encode(latents)
+        centre = c.mean(1, keepdim=True)
+        values, vectors = torch.linalg.eigh(torch.cov(c))
+        scale = values.clamp(min=1e-8).sqrt()
+        whiten, unwhiten = (vectors / scale) @ vectors.T, (vectors * scale) @ vectors.T
+        whitened = whiten @ (c - centre)
+        w, iters, change = _fast_ica(whitened, 0)
+        s = w @ whitened
+        order = (self.components @ unwhiten @ w.T).norm(dim=0).argsort(descending=True)
+        w = w[order] * torch.where(s[order].pow(3).mean(1) < 0, -1.0, 1.0)[:, None]
+        kurtosis = lambda x: float(((x - x.mean(1, keepdim=True)) ** 4).mean(1).div(x.var(1, unbiased=False) ** 2).sub(3).median())
+        print(f"    ICA {w.shape[0]} components: {iters} iterations (last change {change:.1e}), median excess kurtosis "
+              f"{kurtosis(w @ whitened):.1f} (PCA axes: {kurtosis(c):.1f})", flush=True)
+        mixing = self.components @ unwhiten @ w.T
+        size = mixing.norm(dim=0)  # each coefficient keeps the signal variance it carries (its mixing column has unit length), so errors
+        return Basis(self.mean + self.components @ centre, mixing / size, size[:, None] * (w @ whiten @ self.unmix))  # weigh as in latent space
 
     def encode(self, latents: torch.Tensor) -> torch.Tensor:
-        return self.components.T @ (latents - self.mean)
+        return self.unmix @ (latents - self.mean)
 
     def decode(self, coefficients: torch.Tensor) -> torch.Tensor:
         return self.mean + self.components @ coefficients
@@ -129,16 +158,23 @@ def _autocovariance(rows: torch.Tensor) -> torch.Tensor:
     return torch.fft.irfft(power, n=2 * n)[:, : ACF_LAGS + 1] / n
 
 
-def _fast_ica(whitened: torch.Tensor, seed: int) -> torch.Tensor:
-    """(k, k) orthogonal unmixing matrix for whitened coefficients (k, T): symmetric FastICA with g = tanh."""
+def _fast_ica(whitened: torch.Tensor, seed: int) -> tuple[torch.Tensor, int, float]:
+    """(k, k) orthogonal unmixing matrix for whitened coefficients (k, T): symmetric FastICA with g = tanh. Also the
+    iterations taken and the last change (how far any row turned: 1 - |cos| between successive iterates; below
+    ICA_TOLERANCE it has converged, and ICA_ITERS iterations means it did not)."""
     k, n = whitened.shape
     w = torch.linalg.qr(torch.randn(k, k, generator=torch.Generator().manual_seed(seed)))[0]
-    for _ in range(ICA_ITERS):
+    change = float("inf")
+    for i in range(ICA_ITERS):
         s = w @ whitened
-        w = torch.tanh(s) @ whitened.T / n - (1 - torch.tanh(s).pow(2)).mean(1, keepdim=True) * w
-        u, _, vt = torch.linalg.svd(w)
-        w = u @ vt
-    return w
+        new = torch.tanh(s) @ whitened.T / n - (1 - torch.tanh(s).pow(2)).mean(1, keepdim=True) * w
+        u, _, vt = torch.linalg.svd(new)
+        new = u @ vt
+        change = float((1 - (new * w).sum(1).abs()).max())
+        w = new
+        if change < ICA_TOLERANCE:
+            return w, i + 1, change
+    return w, ICA_ITERS, change
 
 
 @dataclass(frozen=True)
@@ -159,7 +195,7 @@ class Axes:
         whitened = (coefficients - mean) / spread
         change = (coefficients[:, 1:] - coefficients[:, :-1]).std(1, keepdim=True)
         levels = torch.quantile(_smooth(whitened[0]), torch.tensor(RHYTHM_LEVELS))
-        return cls(mean, spread, torch.cat([_fast_ica(whitened, seed) for seed in range(ICA_RESTARTS)]), change, levels)
+        return cls(mean, spread, torch.cat([_fast_ica(whitened, seed)[0] for seed in range(ICA_RESTARTS)]), change, levels)
 
     def project(self, x: torch.Tensor) -> torch.Tensor:
         """(ICA_RESTARTS * k, T)."""
@@ -195,6 +231,31 @@ def _dynamics(x: torch.Tensor, axes: Axes) -> torch.Tensor:
     return _sorted(_directions(3 * k) @ torch.cat([state, step, drift]))
 
 
+@dataclass(frozen=True)
+class Window:
+    """Which short trajectories `_windowed` measures: runs of `frames` frames of the leading `components`, along `projections` filters."""
+
+    frames: int = 10  # 0.13 s: the length of an attack and the start of its decay
+    projections: int = 256
+    components: int = 64
+
+    @lru_cache(maxsize=None)
+    def filters(self, components: int) -> torch.Tensor:
+        """(projections, components, frames) fixed random unit-norm filters, the same for source and synthesis."""
+        filters = torch.randn(self.projections, components, self.frames, generator=torch.Generator().manual_seed(1))
+        return filters / filters.flatten(1).norm(dim=1)[:, None, None]
+
+
+def _windowed(x: torch.Tensor, axes: Axes, window: Window) -> torch.Tensor:
+    """(window.projections, T - window.frames + 1) sorted: every run of `window.frames` frames of the leading components, in
+    units of their spread, projected on a random direction (a random filter across components and time). Matching these
+    distributions matches which short trajectories occur, not just which positions and steps, so a pluck and its decay
+    can be told from a burst of noise."""
+    k = min(window.components, x.shape[0])
+    z = (x[:k] - axes.mean[:k]) / axes.spread[:k]
+    return _sorted(F.conv1d(z[None], window.filters(k))[0])
+
+
 def _smooth(signal: torch.Tensor) -> torch.Tensor:
     """(T - RHYTHM_SMOOTHING + 1,): moving average, so the loudness contour is phrases and pauses, not frame jitter."""
     return F.avg_pool1d(signal[None, None], RHYTHM_SMOOTHING, stride=1)[0, 0]
@@ -219,68 +280,6 @@ def _pacing(signal: torch.Tensor, levels: torch.Tensor) -> torch.Tensor:
     centred = active - active.mean(1, keepdim=True)
     covariance = torch.cat([(centred[:, lag:] * centred[:, :-lag]).mean(1, keepdim=True) for lag in RHYTHM_LAGS], 1)
     return torch.cat([RHYTHM_CROSSING_SCALE * crossing, covariance], 1)
-
-
-def loudness_curve(latents: torch.Tensor) -> torch.Tensor:
-    """Smoothed, standardised log loudness of frames of latents (LATENTS, T): the shape of when a stem is loud or quiet."""
-    log = torch.log(latents.norm(dim=0) + LOUDNESS_FLOOR)
-    return _smooth((log - log.mean()) / (log.std() + 1e-6))
-
-
-def cross_correlation(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
-    """(len(CROSS_LAGS),): correlation of `a` at time t + lag with `b` at t, over the frames both cover. Positive lags: `a`
-    follows `b`."""
-    a, b = (s - s.mean() for s in (a, b))
-    a, b = a / (a.std() + 1e-6), b / (b.std() + 1e-6)
-    n = min(len(a), len(b))
-    return torch.stack([(a[lag:n] * b[: n - lag]).mean() if lag >= 0 else (a[: n + lag] * b[-lag:n]).mean() for lag in CROSS_LAGS])
-
-
-@dataclass(frozen=True)
-class Partner:
-    """A stem generated earlier in the same sample, and how the stem being generated should move with it."""
-
-    curve: torch.Tensor  # the partner's generated `loudness_curve`
-    correlation: torch.Tensor  # (len(CROSS_LAGS),): the source's cross-correlation of the two stems' loudness curves
-
-    def penalty(self, basis: Basis, x: torch.Tensor) -> torch.Tensor:
-        return (cross_correlation(loudness_curve(basis.decode(x)), self.curve) - self.correlation).pow(2).mean()
-
-
-@dataclass(frozen=True)
-class Loudness:
-    """How loud a stem is from frame to frame, read from the norm of its decoded latents (which follows the true frame
-    loudness at r = 0.8-0.97; the leading PCA component, which `_rhythm` uses, does not): the histogram of log loudness,
-    so quiet passages keep their share, and the pacing of loud and quiet (`_pacing`) at levels set by the source."""
-
-    values: torch.Tensor  # (T,) sorted log norms
-    pacing: torch.Tensor
-    levels: torch.Tensor  # (len(RHYTHM_LEVELS),): the source's quantiles of the smoothed, standardised log loudness
-    centre: float
-    spread: float
-
-    @classmethod
-    def of_source(cls, x: torch.Tensor, basis: Basis) -> Loudness:
-        log = torch.log(basis.decode(x).norm(dim=0) + LOUDNESS_FLOOR)
-        centre, spread = float(log.mean()), float(log.std())
-        levels = torch.quantile(_smooth((log - centre) / spread), torch.tensor(RHYTHM_LEVELS))
-        return cls._measured(log, levels, centre, spread)
-
-    def of_synthesis(self, x: torch.Tensor, basis: Basis) -> Loudness:
-        """The same statistics of `x`, at this source's levels and scale."""
-        return self._measured(torch.log(basis.decode(x).norm(dim=0) + LOUDNESS_FLOOR), self.levels, self.centre, self.spread)
-
-    @classmethod
-    def _measured(cls, log: torch.Tensor, levels: torch.Tensor, centre: float, spread: float) -> Loudness:
-        return cls(_sorted(log), _pacing(_smooth((log - centre) / spread), levels), levels, centre, spread)
-
-    def distance(self, target: Loudness) -> torch.Tensor:
-        """Mean squared gap between the sorted log loudnesses, relative to the target's variance, plus the pacing distance."""
-        values = self.values
-        reference = target.values
-        if reference.shape[-1] != values.shape[-1]:
-            reference = F.interpolate(reference[None, None], size=values.shape[-1], mode="linear", align_corners=True)[0, 0]
-        return (values - reference).pow(2).mean() / target.values.var() + _distance(self.pacing, target.pacing)
 
 
 def _band_weights(n: int) -> torch.Tensor:
@@ -330,11 +329,13 @@ class Statistics:
     ica_motion: tuple[torch.Tensor, ...]  # per ICA_LAGS: (n, T - lag), change along the `Axes`, sorted
     dynamics: torch.Tensor  # (JOINT_PROJECTIONS, T - DYNAMICS_LAG): see `_dynamics`
     rhythm: torch.Tensor  # (levels, 1 + len(RHYTHM_LAGS)): see `_rhythm`
+    windowed: torch.Tensor  # (window.projections, T - window.frames + 1): see `_windowed`
 
     @classmethod
     def of(
         cls, x: torch.Tensor, lags: tuple[int, ...], spread: torch.Tensor, axes: Axes,
-        activity: float = 1.0, joint: float = 1.0, ica: float = 1.0, dynamics: float = 1.0, rhythm: float = 1.0,
+        activity: float = 1.0, joint: float = 1.0, ica: float = 1.0, dynamics: float = 1.0, rhythm: float = 1.0, windowed: float = 1.0,
+        window: Window = Window(),
     ) -> Statistics:
         """`spread` (k, 1): the source's standard deviation per component, so synthesis is measured on the same scale.
 
@@ -360,17 +361,19 @@ class Statistics:
             tuple(_sorted(along[:, lag:] - along[:, :-lag]) for lag in ICA_LAGS) if ica else (),
             _dynamics(x, axes) if dynamics else none,
             _rhythm(x, axes) if rhythm else none,
+            _windowed(x, axes, window) if windowed else none,
         )
 
     def distance(
-        self, target: Statistics, modulation: float, activity: float, joint: float, ica: float, dynamics: float, rhythm: float = 0.0
+        self, target: Statistics, modulation: float, activity: float, joint: float, ica: float, dynamics: float, rhythm: float = 0.0,
+        windowed: float = 0.0,
     ) -> torch.Tensor:
         acf = ((self.autocovariance - target.autocovariance).pow(2).sum(-1) / target.autocovariance.pow(2).sum(-1)).mean()
         cross = ((self.cross_spectrum - target.cross_spectrum).pow(2).sum((1, 2)) / target.cross_spectrum.pow(2).sum((1, 2))).mean()
         rate = sum(_log_distance(a, b) for a, b in zip(self.activity, target.activity))
         optional = sum(
             weight * _distance(a, b)
-            for weight, a, b in ((rhythm, self.rhythm, target.rhythm), (joint, self.joint, target.joint), (dynamics, self.dynamics, target.dynamics), (ica, self.ica, target.ica))
+            for weight, a, b in ((rhythm, self.rhythm, target.rhythm), (joint, self.joint, target.joint), (dynamics, self.dynamics, target.dynamics), (ica, self.ica, target.ica), (windowed, self.windowed, target.windowed))
             if weight
         )
         return (
@@ -384,6 +387,54 @@ class Statistics:
             + sum(_distance(a, b) for a, b in zip(self.curvature, target.curvature))
             + sum(_distance(a, b) for a, b in zip(self.radius, target.radius))
             + acf
+        )
+
+
+@dataclass(frozen=True)
+class Target:
+    """What synthesis reads from a source when it does not read the source's frames: its statistics (each sorted over time or
+    summarising it), the spread and ICA axes, and the statistics of its decoded audio (tfd.py). Nothing in it is in time order, so it
+    can stand in for the source: a profile stores this and sampling cannot copy a stretch of the original.
+
+    The audio statistics are the main constraint (they include the audio's loudness, which only the waveform can say); the latent
+    ones are a looser one that keeps the sound near what the codec knows."""
+
+    lags: tuple[int, ...]
+    used: tuple[float, ...]  # the (activity, joint, ica, dynamics, rhythm, windowed) weights it was measured with: a statistic at 0 is empty
+    spread: torch.Tensor  # (k, 1)
+    axes: Axes
+    statistics: Statistics
+    window: Window  # what `statistics.windowed` was measured with: synthesis must use the same
+    densities: dict[str, Density]  # the source's frames as mixtures (density.py), by kind: what a manifold term reads in place of frames
+    audio: tfd.Statistics | None  # the time-frequency statistics of the decoded source: what the waveform (or refinement) stage matches
+
+    @classmethod
+    def of(
+        cls, coefficients: torch.Tensor, lags: tuple[int, ...], used: tuple[float, ...], window: Window = Window(),
+        audio: tfd.Statistics | None = None,
+    ) -> Target:
+        """`used`: the (activity, joint, ica, dynamics, rhythm, windowed) weights, as in `Statistics.of`: only the statistics that are not 0 are measured."""
+        spread = coefficients.std(-1, keepdim=True)
+        axes = Axes.fit(coefficients)
+        return cls(
+            tuple(lags), tuple(used), spread, axes, Statistics.of(coefficients, lags, spread, axes, *used, window=window), window,
+            {kind: Density.of(coefficients, kind) for kind in FEATURES}, audio,
+        )
+
+    def draw(self, frames: int, generator: torch.Generator) -> torch.Tensor:
+        """(k, frames): each component drawn independently from its own sorted values: the right marginals, no joint structure, no order."""
+        values = self.statistics.values
+        return values.gather(1, torch.randint(0, values.shape[1], (values.shape[0], frames), generator=generator))
+
+    def state(self) -> dict:
+        return asdict(self)
+
+    @classmethod
+    def from_state(cls, s: dict) -> Target:
+        return cls(
+            tuple(s["lags"]), tuple(s["used"]), s["spread"], Axes(**s["axes"]), Statistics(**s["statistics"]), Window(**s["window"]),
+            {kind: Density.from_state(d) for kind, d in s["densities"].items()},
+            tfd.Statistics.from_state(s["audio"]) if s["audio"] else None,
         )
 
 
@@ -563,7 +614,7 @@ class Band:
 
 
 def synthesise(
-    coefficients: torch.Tensor,
+    coefficients: torch.Tensor | None,
     frames: int,
     iters: int,
     seed: int,
@@ -587,33 +638,42 @@ def synthesise(
     search_dims: int = 0,
     basis: Basis | None = None,
     lead: Lead | None = None,
-    loudness: float = 0.0,
-    cross: float = 0.0,
-    partners: tuple[Partner, ...] = (),
+    target: Target | None = None,
+    windowed: float = 0.0,
+    positions: float = 0.0,
+    transitions: float = 0.0,
+    audio: float = 0.0,
 ) -> torch.Tensor:
     """(k, frames) coefficients with the source's statistics, and frames that stay near the source's own.
 
-    Starts from frames of the source (see `initial_frames`) and moves them by L-BFGS.
+    Starts from frames of the source (see `initial_frames`) and moves them by L-BFGS. With `target` and no `coefficients`
+    the source's frames are never read: it starts from independent draws of each component's values (`Target.draw`) and has
+    no manifold term, so only the statistics hold it.
     """
     generator = torch.Generator().manual_seed(seed)
-    spread = coefficients.std(-1, keepdim=True)
-    axes = Axes.fit(coefficients)
-    used = (activity, joint, ica, dynamics, rhythm)  # the weights that are not 0: the other statistics are not computed
-    target = Statistics.of(coefficients, lags, spread, axes, *used)
-    target_loudness = Loudness.of_source(coefficients, basis) if loudness else None
-    start = initial_frames(coefficients, frames, generator, init).clone()
+    used = (activity, joint, ica, dynamics, rhythm, windowed)  # the weights that are not 0: the other statistics are not computed
+    target = target or Target.of(coefficients, lags, used)
+    if target.lags != tuple(lags):
+        raise ValueError(f"the target was measured at lags {target.lags}, not {tuple(lags)}")
+    if any(weight and not measured for weight, measured in zip(used, target.used)):
+        raise ValueError(f"asked for weights {used} but the target only has statistics {target.used}")
+    if audio and target.audio is None:
+        raise ValueError("asked for the audio statistics but the target was measured without them")
+    spread, axes = target.spread, target.axes
+    start = (target.draw(frames, generator) if coefficients is None else initial_frames(coefficients, frames, generator, init)).clone()
     y = (lead.start(basis, start) if lead else start).requires_grad_()
     optimiser = torch.optim.LBFGS([y], lr=1.0, max_iter=iters, history_size=30, line_search_fn="strong_wolfe")
 
     scales = [(window, tolerance, floor_, short_share)] + ([(long_window, long_tolerance, 0.0, 1.0)] if long_window else [])
-    bands = [Band.of(coefficients, pool, frames, scale, takes, search_dims, generator) for scale in scales]
+    bands = [] if coefficients is None else [Band.of(coefficients, pool, frames, scale, takes, search_dims, generator) for scale in scales]
+
+    densities = {kind: weight for kind, weight in (("positions", positions), ("transitions", transitions)) if weight}  # the density terms in use
 
     def objective(x: torch.Tensor) -> torch.Tensor:
         penalty = sum(band.penalty(x) for band in bands)
         held = lead.penalty(basis, x) if lead else 0.0
-        loud = loudness * target_loudness.of_synthesis(x, basis).distance(target_loudness) if target_loudness else 0.0
-        together = cross * sum(p.penalty(basis, x) for p in partners)
-        return Statistics.of(x, lags, spread, axes, *used).distance(target, modulation, activity, joint, ica, dynamics, rhythm) + manifold * penalty + held + loud + together
+        shaped = sum(weight * target.densities[kind].penalty(x) for kind, weight in densities.items())
+        return Statistics.of(x, lags, spread, axes, *used, window=target.window).distance(target.statistics, modulation, activity, joint, ica, dynamics, rhythm, windowed) + manifold * penalty + held + shaped
 
     def closure() -> torch.Tensor:
         optimiser.zero_grad()
@@ -622,7 +682,29 @@ def synthesise(
         return loss
 
     first = optimiser.step(closure).item()
-    print(f"    objective {first:.3f} -> {objective(y).item():.4f}", flush=True)
+    gaps = "".join(f"  {kind} gap {float(target.densities[kind].penalty(y)):.3f}" for kind in densities)
+    print(f"    objective {first:.3f} -> {objective(y).item():.4f}{gaps}", flush=True)
+    return refine(y, objective, basis, target.audio, audio) if audio else y.detach()
+
+
+def refine(y: torch.Tensor, objective, basis: Basis, target: tfd.Statistics, weight: float) -> torch.Tensor:
+    """A second, short L-BFGS stage that adds the time-frequency statistics of the decoded audio (`tfd.Statistics`) to `objective`:
+    the latent statistics get the coefficients to the right region, and this moves them to where the decoded sound has the source's
+    harmonic structure, attacks and texture. Each step runs the decoder forward and backward (about 0.5 s per 10 s)."""
+
+    def gap(x: torch.Tensor) -> torch.Tensor:
+        return tfd.Statistics.of(codec.decode_differentiable(basis.decode(x)), like=target).distance(target)
+
+    def closure() -> torch.Tensor:
+        optimiser.zero_grad()
+        loss = objective(y) + weight * gap(y)
+        loss.backward()
+        return loss
+
+    before = float(gap(y.detach()))
+    optimiser = torch.optim.LBFGS([y], lr=1.0, max_iter=AUDIO_ITERS, history_size=30, line_search_fn="strong_wolfe")
+    optimiser.step(closure)
+    print(f"    audio statistics gap {before:.3f} -> {float(gap(y.detach())):.3f}", flush=True)
     return y.detach()
 
 

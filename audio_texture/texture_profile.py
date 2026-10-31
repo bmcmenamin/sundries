@@ -5,28 +5,34 @@
 
 The song's separated stems are cut into clips; each stem of each clip is encoded (codec.py), perturbed copies of it are
 made and encoded (perturb.py), and a PCA is fitted on the original plus its copies. The profile keeps, per clip and stem,
-what `codec_texture.synthesise` reads: the PCA basis, the original's coefficients (every statistic it matches is
-computed from them), the copies' coefficients (what the manifold term pulls toward; half precision), the loudness curve
-(for `--cross`) and the stem's loudness in the source. No audio and no intermediate files: sampling needs only this file.
+only statistics: the PCA basis, the `codec_texture.Target` (sorted values, changes, autocovariance and the rest, none in
+time order), the pairwise cross-correlations of the stems' audio level curves (for the waveform stage's cross-stem loudness term) and the stem's loudness in the
+source. It holds no frames of the original and no perturbed copies, so sampling cannot copy a stretch of the song, and the
+manifold term (which needs frames to pull toward) is not part of it. No audio and no intermediate files: sampling needs
+only this file.
 """
 
 from __future__ import annotations
 
 import random
 from collections.abc import Collection
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 import torch
 
 import codec
-from codec_texture import Basis, loudness, loudness_curve, pooled
+import tfd
+from codec_texture import LAG_SETS, Basis, Target, Window, loudness, pooled
+from tfd import cross_correlation, frame_level, level_curve
 from paths import stems_of
 from perturb import Perturbation
 from synthesize import decode_mono
 
-FORMAT = 1
+FORMAT = 13
 MIN_DB = -25.0  # a stem this far below the clip's mix is left out of the clip
+LAGS = LAG_SETS["half"]  # the lags the statistics are measured at; sampling must use the same set
+MEASURED = (1.0, 1.0, 1.0, 1.0, 1.0, 1.0)  # the (activity, joint, ica, dynamics, rhythm, windowed) statistics a profile holds; a sample picks which to match
 
 
 def clip_edges(duration: float, clip_seconds: float) -> list[float]:
@@ -45,32 +51,37 @@ def levels_db(pieces: dict[str, torch.Tensor]) -> dict[str, float]:
 @dataclass(frozen=True)
 class StemProfile:
     basis: Basis
-    coefficients: torch.Tensor  # (k, T): the source's latents in `basis`
-    copies: tuple[torch.Tensor, ...]  # each (k, T_i), half precision; lengths differ a little (the pitch shift changes the speed)
-    curve: torch.Tensor  # `loudness_curve` of the source's latents
+    target: Target  # the source's statistics: nothing in it is in time order
     lufs: float  # the stem's loudness in the source
+    correlations: dict[str, torch.Tensor]  # each other stem of the clip -> `cross_correlation` of this stem's level curve with theirs (for `tfd.Partner`)
 
     @classmethod
-    def build(cls, audio: torch.Tensor, rng: random.Random, copies: int, components: int, original_share: float) -> StemProfile:
-        """`audio`: the stem's part of the song, at its own level, at the codec's rate."""
+    def build(
+        cls, audio: torch.Tensor, rng: random.Random, copies: int, components: int, original_share: float, window: Window,
+        independent: bool,
+    ) -> tuple[StemProfile, torch.Tensor]:
+        """The stem's profile, without its correlations, and its level curve (from the audio, only for relating the clip's stems to one another).
+
+        `audio`: the stem's part of the song, at its own level, at the codec's rate. The perturbed copies only shape the PCA basis."""
         scaled = codec.normalise(audio)
         latents = codec.encode(scaled)
         variants = [codec.encode(codec.normalise(Perturbation.random(rng).apply(scaled))) for _ in range(copies)]
         basis = Basis.fit(*pooled(latents, variants, components, original_share))
-        return cls(basis, basis.encode(latents), tuple(basis.encode(v).half() for v in variants), loudness_curve(latents), loudness(audio))
-
-    def pool(self) -> list[torch.Tensor]:
-        return [c.float() for c in self.copies]
+        basis = basis.independent(latents) if independent else basis
+        coefficients = basis.encode(latents)
+        audio_statistics = tfd.Statistics.of(codec.decode(basis.decode(coefficients)))  # of the decoded reconstruction: the codec's own loss cancels
+        target = Target.of(coefficients, LAGS, MEASURED, window, audio_statistics)
+        return cls(basis, target, loudness(audio), {}), level_curve(frame_level(scaled))
 
     def state(self) -> dict:
         return {
-            "mean": self.basis.mean, "components": self.basis.components, "coefficients": self.coefficients,
-            "copies": list(self.copies), "curve": self.curve, "lufs": self.lufs,
+            "mean": self.basis.mean, "components": self.basis.components, "unmix": self.basis.unmix, "target": self.target.state(),
+            "lufs": self.lufs, "correlations": self.correlations,
         }
 
     @classmethod
     def from_state(cls, s: dict) -> StemProfile:
-        return cls(Basis(s["mean"], s["components"]), s["coefficients"], tuple(s["copies"]), s["curve"], s["lufs"])
+        return cls(Basis(s["mean"], s["components"], s["unmix"]), Target.from_state(s["target"]), s["lufs"], s["correlations"])
 
 
 @dataclass(frozen=True)
@@ -87,14 +98,21 @@ class ClipProfile:
         return ClipProfile(self.start, self.end, {n: s for n, s in self.stems.items() if n not in names})
 
     @classmethod
-    def build(cls, audio: dict[str, torch.Tensor], start: float, end: float, seed: str, copies: int, components: int, original_share: float) -> ClipProfile:
+    def build(
+        cls, audio: dict[str, torch.Tensor], start: float, end: float, seed: str, copies: int, components: int, original_share: float,
+        window: Window, independent: bool,
+    ) -> ClipProfile:
         """`audio`: every stem of the whole song, at the codec's rate."""
         pieces = {name: a[round(start * codec.CODEC_RATE) : round(end * codec.CODEC_RATE)] for name, a in audio.items()}
         levels = levels_db(pieces)
-        stems = {
-            name: StemProfile.build(piece, random.Random(f"{seed}/{name}"), copies, components, original_share)
+        built = {
+            name: StemProfile.build(piece, random.Random(f"{seed}/{name}"), copies, components, original_share, window, independent)
             for name, piece in pieces.items()
             if levels[name] >= MIN_DB
+        }
+        stems = {
+            name: replace(stem, correlations={other: cross_correlation(curve, built[other][1]) for other in built if other != name})
+            for name, (stem, curve) in built.items()
         }
         return cls(start, end, stems)
 
@@ -108,7 +126,8 @@ class Profile:
     @classmethod
     def build(
         cls, song: str, clip_seconds: float = 10.0, copies: int = 32, components: int = 64, original_share: float = 0.5,
-        seed: int = 0, limit: int | None = None,
+        seed: int = 0, limit: int | None = None, window: Window = Window(),
+        independent: bool = False,
     ) -> Profile:
         """The profile of a separated song (separate.py); `limit`: only its first clips (a quick test)."""
         audio = {s.name: decode_mono(s.path, codec.CODEC_RATE) for s in stems_of(song)}
@@ -121,8 +140,12 @@ class Profile:
         clips = []
         for i, (start, end) in enumerate(spans):
             print(f"clip {i + 1}/{len(spans)}  {start:.1f}-{end:.1f} s", flush=True)
-            clips.append(ClipProfile.build(audio, start, end, f"{seed}/{song}/{i}", copies, components, original_share))
-        settings = {"clip_seconds": clip_seconds, "copies": copies, "components": components, "original_share": original_share, "seed": seed}
+            clips.append(ClipProfile.build(audio, start, end, f"{seed}/{song}/{i}", copies, components, original_share, window, independent))
+        settings = {
+            "independent": independent,
+            "clip_seconds": clip_seconds, "copies": copies, "components": components, "original_share": original_share, "seed": seed,
+            "window_frames": window.frames, "window_projections": window.projections, "window_components": window.components,
+        }
         return cls(song, tuple(clips), settings)
 
     def save(self, path: Path) -> None:

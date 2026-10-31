@@ -28,7 +28,7 @@ TARGET_RMS = 0.05
 def model() -> EncodecModel:
     codec = EncodecModel.encodec_model_24khz()
     codec.set_target_bandwidth(BANDWIDTH)
-    return codec.eval()
+    return codec.eval().requires_grad_(False)  # only the latents carry gradients (see `decode_differentiable`)
 
 
 def normalise(audio: torch.Tensor) -> torch.Tensor:
@@ -51,6 +51,16 @@ def encode(audio: torch.Tensor) -> torch.Tensor:
 @torch.no_grad()
 def decode(latents: torch.Tensor) -> torch.Tensor:
     """(LATENTS, frames) -> (frames * HOP,) audio."""
+    return model().decoder(latents[None])[0, 0]
+
+
+def encode_differentiable(audio: torch.Tensor) -> torch.Tensor:
+    """`encode`, with gradients flowing back to the audio."""
+    return model().encoder(audio[None, None])[0]
+
+
+def decode_differentiable(latents: torch.Tensor) -> torch.Tensor:
+    """`decode`, with gradients flowing back to the latents: about 0.5 s forward and backward for 10 s."""
     return model().decoder(latents[None])[0, 0]
 
 
