@@ -31,18 +31,19 @@ ETA_FLOOR, TOLERANCE = 1e-5, 1e-5
 song, which, mode = sys.argv[1:4]
 K = int(sys.argv[4])
 FRACTIONS = [float(x) for x in sys.argv[5:]] or [0.12]
-SHORT = {"hanging_2": "hg", "walk_2": "wk", "jack_1": "jk"}[song]
+SHORT = {"hanging_2": "hg", "walk_2": "wk", "jack_1": "jk"}.get(song, song)  # a pseudo-song (segment.py pool) is its own short name
+SOURCE_FRAMES = int(float(os.environ.get("SOURCE_SECONDS", 10)) * 75)  # MERT frames of the source that the fit reads (75 per second: 750 = 10 s)
 MASK = torch.tensor([1.0 if (mode == "sustain" or d == 0) else 0.0 for d in DURATIONS]).view(-1, 1, 1, 1)
 
 
 def mix_of(name: str) -> torch.Tensor:
-    stems = [decode_mono(s.path, RATE)[: 750 * codec.HOP] for s in stems_of(name) if s.name != "vocals"]  # vocals are left out of every mix
+    stems = [decode_mono(s.path, RATE)[: SOURCE_FRAMES * codec.HOP] for s in stems_of(name) if s.name != "vocals"]  # vocals are left out of every mix
     return band_limit(codec.normalise(sum(stems)).numpy())
 
 
 def named_stem(name: str, which: str) -> torch.Tensor:
     path = next(s.path for s in stems_of(name) if s.name == which)
-    return band_limit(codec.normalise(decode_mono(path, RATE)[: 750 * codec.HOP]).numpy())
+    return band_limit(codec.normalise(decode_mono(path, RATE)[: SOURCE_FRAMES * codec.HOP]).numpy())
 
 
 wave = mix_of(song) if which == "mix" else named_stem(song, which)

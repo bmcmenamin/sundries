@@ -13,6 +13,7 @@ Atom        the medoid event's source audio, 5120 samples (the 4 frames plus 512
 render(H, atoms) plays a trigger grid H (clusters x pitch offsets -W..W x frames) as the sum of its atoms: linear in H, so it is differentiable.
 Running this file writes the bank to atoms/{SONG}_{WHICH}_bank.pt and compare/B_ref_{SONG}_{WHICH}.wav, the source's own arrangement played back through it.
 """
+import json
 import os
 import sys
 from pathlib import Path
@@ -32,7 +33,9 @@ from paths import stems_of  # noqa: E402
 from synthesize import decode_mono  # noqa: E402
 
 TF = int(os.environ.get("TF", 4))  # snippet length in frames of 42.7 ms (4 = 170 ms)
-TAG = "" if TF == 4 else f"_tf{TF}"  # keeps the file names used with 4-frame snippets
+K = int(os.environ.get("K", 24))  # templates in the sparse fit (sustain48.py); the fit and the bank are named by it when it is not 24
+K_TAG = "" if K == 24 else f"_k{K}"
+TAG = K_TAG + ("" if TF == 4 else f"_tf{TF}")  # keeps the file names used with 24 templates and 4-frame snippets
 RATE, HOP, STRIDE, TEMPLATE_BINS, PAD, W, COMPRESS = 24000, 1024, 4, 120, 512, 6, 0.3
 FADE = 120  # 5 ms
 SNIPPET = TF * HOP + 2 * PAD  # 5120 samples
@@ -42,12 +45,19 @@ OUT = ROOT / "out/codec_texture/compare"
 SEED_S0 = KERNEL // 2 - TF * HOP // 2  # output offset that puts a snippet's centre at its event's centre
 
 
-def source_audio(song: str, which: str, seconds: float = 10.0) -> torch.Tensor:
+def source_audio(song: str, which: str, seconds: float = float(os.environ.get("SOURCE_SECONDS", 10))) -> torch.Tensor:
     """Full-band, unit-variance audio of one named stem, or of the vocal-free mix (which = "mix")."""
     stems = [decode_mono(s.path, RATE) for s in stems_of(song) if (s.name != "vocals" if which == "mix" else s.name == which)]
     n = min(len(s) for s in stems)
     wave = sum(s[:n] for s in stems)[: int(seconds * RATE)]
     return wave / wave.std()
+
+
+def clips_of(song: str, n: int) -> list[tuple[int, int]]:
+    """The sample ranges of a pooled pseudo-song's separate clips (segment.py pool writes them), cut to the n samples read; empty for an ordinary song."""
+    path = ATOMS_DIR / f"{song}_clips.json"
+    spans = json.loads(path.read_text()) if path.exists() else []
+    return [(a, min(b, n)) for a, b in spans if a < n]
 
 
 def events_of(x0: torch.Tensor) -> np.ndarray:
@@ -120,7 +130,7 @@ def write(path: Path, wave: torch.Tensor) -> None:
 
 
 def build(song: str, which: str, fraction: float) -> dict:
-    fit = torch.load(ATOMS_DIR / f"{song}_{which}_attack_f0.25_tf{TF}_sus.pt")
+    fit = torch.load(ATOMS_DIR / f"{song}_{which}_attack_f0.25{K_TAG}_tf{TF}_sus.pt")
     v = fit["V"].numpy()
     events = events_of(fit["x"][0])
     audio = source_audio(song, which)
@@ -138,7 +148,9 @@ def build(song: str, which: str, fraction: float) -> dict:
     gains = np.array([rms(snippet_of(audio, int(t))) / rms(atoms[labels[i]]) for i, (_, _, t, _) in enumerate(events)])
     medoid_shift = events[medoids, 1].astype(int)
     offsets = (events[:, 1] - medoid_shift[labels]).astype(int)
+    clips = clips_of(song, audio.numel())
     return {
+        **({"clips": clips} if clips else {}),
         "events": events, "labels": labels, "medoids": medoids, "atoms": atoms, "medoid_shift": medoid_shift, "offsets": offsets, "gains": gains,
         "audio": audio, "frames": v.shape[1], "distance": distance,
     }

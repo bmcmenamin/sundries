@@ -1,6 +1,10 @@
 """Arrange real snippets so that the trigger statistics AND MERT's activation statistics match the source's. Only the triggers are optimised.
 
-    snippet_generate.py SONG WHICH ITERS TAG        env: NO_MERT=1 (trigger statistics only), NO_TRIG=1 (MERT only), SEED, TRIG_WEIGHT (default 1)
+    snippet_generate.py SONG WHICH ITERS TAG        env: NO_MERT=1 (trigger statistics only), NO_TRIG=1 (MERT only), SEED, TRIG_WEIGHT (default 1),
+                                                DEVICE (MERT's; default mps if present), NO_CUT=1 (no layer cutoff),
+                                                OPTIM (lbfgs | adam | adam_const; default lbfgs, where ITERS counts steps of up to 30 evaluations: use 3)
+                                                OUT_SAMPLES (exact length; overrides OUT_SECONDS), CLAMP (the previous section's N_*_triggers.pt: its last
+                                                TF*1024 samples and its tail are this section's fixed start), CLAMP_GAIN (previous units -> this section's)
 
 Bank: atoms/{SONG}_{WHICH}_bank.pt (snippets.py). Variable: H (clusters x pitch offsets x frames), non-negative, free only on a support of 3x3 cells
 (pitch offset +-1, frame +-1) around 1.2 x as many random seed events as the source has; seeds drawn from the source's cluster usage, offsets and gains,
@@ -29,6 +33,9 @@ import snippets as sn  # noqa: E402
 song, which, iters, tag = sys.argv[1], sys.argv[2], int(sys.argv[3]), sys.argv[4]
 NO_MERT, NO_TRIG, NO_RHYTHM = bool(os.environ.get("NO_MERT")), bool(os.environ.get("NO_TRIG")), bool(os.environ.get("NO_RHYTHM"))
 SEED, TRIG_WEIGHT = int(os.environ.get("SEED", 0)), float(os.environ.get("TRIG_WEIGHT", 1.0))
+OPTIM = os.environ.get("OPTIM", "lbfgs")  # lbfgs (the default, 3 steps), adam (lr 0.02, cosine), adam_const (lr 0.05)
+NO_CUT = bool(os.environ.get("NO_CUT"))  # run MERT through all layers even while the upper ones have no weight yet
+DEVICE = os.environ.get("DEVICE", "mps" if torch.backends.mps.is_available() else "cpu")  # MERT's device; triggers and render stay on the CPU
 LAYERS, PROJECTIONS, LAGS, RAMP = list(range(13)), 256, (1, 4, 16), 0.15
 torch.manual_seed(SEED)
 rng = np.random.default_rng(SEED)
@@ -38,7 +45,8 @@ events, labels, offsets, gains = bank["events"], bank["labels"], bank["offsets"]
 atoms, medoid_shift, T = bank["atoms"], bank["medoid_shift"], bank["frames"]
 C, D, S_ABS = len(atoms), 2 * sn.W + 1, int(medoid_shift.max()) + 2 * sn.W + 1
 OUT_SECONDS = float(os.environ.get("OUT_SECONDS", 10))
-samples = int(OUT_SECONDS * sn.RATE)  # the output may be longer than the source: every statistic is length-free
+samples = int(os.environ.get("OUT_SAMPLES", OUT_SECONDS * sn.RATE))  # the output may be longer than the source: every statistic is length-free
+HANDOFF, TAIL = sn.TF * sn.HOP, sn.SNIPPET  # a section's last HANDOFF samples (and the TAIL after its end) are the next section's first
 T_OUT = samples // sn.HOP + 1
 kernels = sn.kernels_of(atoms)
 H_src = sn.grid_of(bank)
@@ -83,8 +91,19 @@ def trigger_statistics(H: torch.Tensor) -> dict[str, torch.Tensor]:
     return stats if NO_RHYTHM else {**stats, **rs.rhythm_statistics(A, group)}
 
 
+clips = bank.get("clips") or [(0, bank["audio"].numel())]  # sample ranges of the source's separate clips (segment.py pool); one clip otherwise
+clip_frames = [(a // sn.HOP, min(b // sn.HOP, H_src.shape[-1])) for a, b in clips] if "clips" in bank else [(0, H_src.shape[-1])]
+
+
+def source_statistics() -> dict[str, torch.Tensor]:
+    """The trigger statistics of each clip on its own (no lag looks across a gap between clips), averaged in proportion to the clips' lengths."""
+    per_clip = [(trigger_statistics(H_src[..., a:b]), b - a) for a, b in clip_frames]
+    total = sum(n for _, n in per_clip)
+    return {k: sum(s[k] * n for s, n in per_clip) / total for k in per_clip[0][0]}
+
+
 with torch.no_grad():
-    trig_target = trigger_statistics(H_src)
+    trig_target = source_statistics()
 trig_scale = {k: float(v.pow(2).mean()) + 1e-9 for k, v in trig_target.items()}
 
 
@@ -95,36 +114,58 @@ def trigger_loss(H: torch.Tensor) -> tuple[torch.Tensor, dict[str, float]]:
 
 
 # ----------------------------------------------------------------------------------------------------------------------------- MERT
-model = AutoModel.from_pretrained("m-a-p/MERT-v1-95M", trust_remote_code=True).eval()
+model = AutoModel.from_pretrained("m-a-p/MERT-v1-95M", trust_remote_code=True).eval().to(DEVICE)
 for p in model.parameters():
     p.requires_grad_(False)
 captured: dict[int, torch.Tensor] = {}
-model.feature_projection.register_forward_hook(lambda _m, _i, o: captured.__setitem__(0, o[0] if isinstance(o, tuple) else o))
+stop_at = [None]  # the forward pass ends at this layer (layers above it have no weight yet)
+
+
+class Stop(Exception):
+    pass
+
+
+def capture(k: int):
+    def hook(_m, _i, o):
+        captured[k] = o[0] if isinstance(o, tuple) else o
+        if stop_at[0] == k:
+            raise Stop
+
+    return hook
+
+
+model.feature_projection.register_forward_hook(capture(0))
 for k, layer in enumerate(model.encoder.layers, start=1):
-    layer.register_forward_hook(lambda _m, _i, o, k=k: captured.__setitem__(k, o[0] if isinstance(o, tuple) else o))
+    layer.register_forward_hook(capture(k))
 
 
-def activations(wave: torch.Tensor) -> dict[int, torch.Tensor]:
-    model(((wave - wave.mean()) / (wave.std() + 1e-8))[None])
-    return {k: captured[k][0].T for k in LAYERS}
+def activations(wave: torch.Tensor, depth: int = max(LAYERS)) -> dict[int, torch.Tensor]:
+    stop_at[0] = depth if depth < max(LAYERS) else None
+    try:
+        model(((wave - wave.mean()) / (wave.std() + 1e-8))[None])
+    except Stop:
+        pass
+    return {k: captured[k][0].T for k in range(depth + 1)}
 
 
-with torch.no_grad():
-    target_acts = activations(bank["audio"])
-mean = {k: a.mean(1, keepdim=True) for k, a in target_acts.items()}
-std = {k: a.std(1, keepdim=True) + 1e-6 for k, a in target_acts.items()}
-projection = {k: F.normalize(torch.randn(PROJECTIONS, a.shape[0]), dim=1) for k, a in target_acts.items()}
+with torch.no_grad():  # one forward pass per clip: a clip is never joined to the next, and a pooled source never needs one long attention window
+    target_acts = [activations(bank["audio"][a:b].to(DEVICE)) for a, b in clips]
+pooled = {k: torch.cat([c[k] for c in target_acts], 1) for k in LAYERS}
+mean = {k: a.mean(1, keepdim=True) for k, a in pooled.items()}
+std = {k: a.std(1, keepdim=True) + 1e-6 for k, a in pooled.items()}
+projection = {k: F.normalize(torch.randn(PROJECTIONS, a.shape[0]), dim=1).to(DEVICE) for k, a in pooled.items()}
 
 
-def mert_statistics(acts: dict[int, torch.Tensor]) -> dict[str, torch.Tensor]:
+def mert_statistics(clip_acts: list[dict[int, torch.Tensor]]) -> dict[str, torch.Tensor]:
+    """Sorted histograms pooled over the clips; the changes at a lag are taken inside each clip, never across the gap between two."""
     out = {}
-    for k, a in acts.items():
-        z = (a - mean[k]) / std[k]
-        p = projection[k] @ z
-        out[f"{k}/units"] = z.sort(1).values
-        out[f"{k}/joint"] = p.sort(1).values
+    for k in clip_acts[0]:
+        z = [(c[k] - mean[k]) / std[k] for c in clip_acts]
+        p = [projection[k] @ x for x in z]
+        out[f"{k}/units"] = torch.cat(z, 1).sort(1).values
+        out[f"{k}/joint"] = torch.cat(p, 1).sort(1).values
         for lag in LAGS:
-            out[f"{k}/motion{lag}"] = (p[:, lag:] - p[:, :-lag]).sort(1).values
+            out[f"{k}/motion{lag}"] = torch.cat([x[:, lag:] - x[:, :-lag] for x in p], 1).sort(1).values
     return out
 
 
@@ -145,11 +186,16 @@ def layer_weight(k: int, progress: float) -> float:
     return min(max((progress - start) / RAMP, 0.0), 1.0) if k > 0 else 1.0
 
 
+def active_depth(progress: float) -> int:
+    """The highest layer that already counts (all of them with NO_CUT)."""
+    return max(LAYERS) if NO_CUT else max(k for k in LAYERS if layer_weight(k, progress) > 0)
+
+
 def mert_loss(audio: torch.Tensor, progress: float) -> tuple[torch.Tensor, dict[int, float]]:
-    stats = mert_statistics(activations(audio))
-    parts = {k: (stats[k] - at_length(mert_target[k], stats[k].shape[-1])).pow(2).mean() / mert_scale[k] for k in mert_target}
-    weights = {k: layer_weight(int(k.split("/")[0]), progress) for k in mert_target}
-    by_layer = {layer: float(np.mean([float(v) for k, v in parts.items() if k.startswith(f"{layer}/")])) for layer in LAYERS}
+    stats = mert_statistics([activations(audio.to(DEVICE), active_depth(progress))])
+    parts = {k: (stats[k] - at_length(mert_target[k], stats[k].shape[-1])).pow(2).mean() / mert_scale[k] for k in stats}
+    weights = {k: layer_weight(int(k.split("/")[0]), progress) for k in stats}
+    by_layer = {layer: float(np.mean([float(v) for k, v in parts.items() if k.startswith(f"{layer}/")])) for layer in {int(k.split("/")[0]) for k in stats}}
     return sum(weights[k] * parts[k] for k in parts) / sum(weights.values()), by_layer
 
 
@@ -173,36 +219,73 @@ def triggers() -> torch.Tensor:
     return torch.relu(raw) * mask
 
 
-optimiser = torch.optim.Adam([raw], lr=0.02)
-schedule = torch.optim.lr_scheduler.CosineAnnealingLR(optimiser, iters, eta_min=0.002)
-print(f"{song} {which}: {C} clusters, {len(events)} source events, {n_seed} seed events, support {int(mask.sum())} cells; MERT {'off' if NO_MERT else 'on'}, trigger statistics {'off' if NO_TRIG else 'on'}", flush=True)
-begin = time.time()
-for i in range(iters):
-    optimiser.zero_grad()
+def clamp_of(path: str | None, gain: float) -> torch.Tensor:
+    """The previous section's last HANDOFF samples and its ringing-out tail, in this section's units, laid at the start of a zero waveform. Constant: only
+    the triggers are optimised around it, so MERT sees it and the new triggers have to fit onto it."""
+    if path is None:
+        return torch.zeros(samples + TAIL)
+    previous = torch.load(path)
+    kept = previous["audio_ext"][previous["samples"] - HANDOFF :] * gain
+    return torch.nn.functional.pad(kept, (0, samples + TAIL - kept.numel()))
+
+
+clamp = clamp_of(os.environ.get("CLAMP"), float(os.environ.get("CLAMP_GAIN", 1.0)))
+
+
+def played(H: torch.Tensor, length: int) -> torch.Tensor:
+    rendered = sn.render(H, kernels, length)  # a little short when the tail asked for runs past the last snippet's end
+    return F.pad(rendered, (0, length - rendered.numel())) + clamp[:length]
+
+
+def objective(progress: float) -> tuple[torch.Tensor, list[str], torch.Tensor, torch.Tensor]:
     H = triggers()
-    audio = sn.render(H, kernels, samples)
+    audio = played(H, samples)
     total, notes = torch.zeros(()), []
     if not NO_TRIG:
         tl, tparts = trigger_loss(H)
         total = total + TRIG_WEIGHT * tl
         notes.append(f"trig {float(tl):.3f} (" + " ".join(f"{k} {v:.2f}" for k, v in tparts.items()) + ")")
     if not NO_MERT:
-        ml, by_layer = mert_loss(audio, i / iters)
-        total = total + ml
+        ml, _ = mert_loss(audio, progress)
+        total = total + ml.cpu()
         notes.append(f"mert {float(ml):.4f}")
-    total.backward()
-    optimiser.step()
-    schedule.step()
-    if i % 25 == 0 or i == iters - 1:
+    return total, notes, H, audio
+
+
+if OPTIM == "lbfgs":  # iters = number of L-BFGS steps (each up to 30 evaluations); the full objective throughout, no layer schedule
+    optimiser = torch.optim.LBFGS([raw], lr=1.0, max_iter=25, max_eval=30, history_size=10, line_search_fn="strong_wolfe")
+    schedule = None
+else:
+    optimiser = torch.optim.Adam([raw], lr=0.05 if OPTIM == "adam_const" else 0.02)
+    schedule = None if OPTIM == "adam_const" else torch.optim.lr_scheduler.CosineAnnealingLR(optimiser, iters, eta_min=0.002)
+print(f"{song} {which}: {C} clusters, {len(events)} source events, {n_seed} seed events, support {int(mask.sum())} cells; MERT {'off' if NO_MERT else 'on'}, trigger statistics {'off' if NO_TRIG else 'on'}", flush=True)
+begin = time.time()
+for i in range(iters):
+    progress = 1.0 if OPTIM == "lbfgs" else i / iters
+
+    last = []  # the latest evaluation: for Adam the state the step starts from, for L-BFGS the end of its line search
+
+    def closure():
+        optimiser.zero_grad()
+        last[:] = objective(progress)
+        last[0].backward()
+        return last[0]
+
+    optimiser.step(closure)
+    _, notes, H, audio = last
+    if schedule:
+        schedule.step()
+    if i % 25 == 0 or i == iters - 1 or OPTIM == "lbfgs":
         print(f"iter {i:4d}  " + "  ".join(notes) + f"  active cells {int((H > 0.05).sum())}  ({time.time() - begin:.0f} s)", flush=True)
     if (i + 1) % 100 == 0:
         sn.write(sn.OUT / f"N_{tag}.wav", audio)
 
 with torch.no_grad():
     H = triggers()
-    audio = sn.render(H, kernels, samples)
+    audio = played(H, samples)
+    audio_ext = played(H, samples + TAIL)  # with the notes that are still ringing after the end: the next section's clamp is cut from this
 sn.write(sn.OUT / f"N_{tag}.wav", audio)
-torch.save({"H": H, "raw": raw.detach(), "audio": audio}, sn.ATOMS_DIR / f"N_{tag}_triggers.pt")
+torch.save({"H": H, "raw": raw.detach(), "audio": audio, "audio_ext": audio_ext, "samples": samples}, sn.ATOMS_DIR / f"N_{tag}_triggers.pt")
 
 # copy check, over the span the source covers: generated events (cells above 30% of the median seed gain) that coincide with a source event of the same cluster within 1 frame
 source_cells = {(int(c), int(t) + dt) for c, t in zip(labels, events[:, 2]) for dt in (-1, 0, 1)}
