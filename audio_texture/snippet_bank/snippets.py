@@ -13,6 +13,7 @@ Atom        the medoid event's source audio, 5120 samples (the 4 frames plus 512
 render(H, atoms) plays a trigger grid H (clusters x pitch offsets -W..W x frames) as the sum of its atoms: linear in H, so it is differentiable.
 Running this file writes the bank to atoms/{SONG}_{WHICH}_bank.pt and compare/B_ref_{SONG}_{WHICH}.wav, the source's own arrangement played back through it.
 """
+import os
 import sys
 from pathlib import Path
 
@@ -30,7 +31,9 @@ from scipy.spatial.distance import squareform  # noqa: E402
 from paths import stems_of  # noqa: E402
 from synthesize import decode_mono  # noqa: E402
 
-RATE, HOP, STRIDE, TF, TEMPLATE_BINS, PAD, W, COMPRESS = 24000, 1024, 4, 4, 120, 512, 6, 0.3
+TF = int(os.environ.get("TF", 4))  # snippet length in frames of 42.7 ms (4 = 170 ms)
+TAG = "" if TF == 4 else f"_tf{TF}"  # keeps the file names used with 4-frame snippets
+RATE, HOP, STRIDE, TEMPLATE_BINS, PAD, W, COMPRESS = 24000, 1024, 4, 120, 512, 6, 0.3
 FADE = 120  # 5 ms
 SNIPPET = TF * HOP + 2 * PAD  # 5120 samples
 KERNEL = int(np.ceil(SNIPPET * 2 ** (W / 12)))  # the longest atom: an octave down
@@ -117,7 +120,7 @@ def write(path: Path, wave: torch.Tensor) -> None:
 
 
 def build(song: str, which: str, fraction: float) -> dict:
-    fit = torch.load(ATOMS_DIR / f"{song}_{which}_attack_f0.25_tf4_sus.pt")
+    fit = torch.load(ATOMS_DIR / f"{song}_{which}_attack_f0.25_tf{TF}_sus.pt")
     v = fit["V"].numpy()
     events = events_of(fit["x"][0])
     audio = source_audio(song, which)
@@ -161,7 +164,7 @@ if __name__ == "__main__":
     kernels = kernels_of(bank["atoms"])
     audio = render(grid_of(bank), kernels, bank["audio"].numel())
     print(f"bank playback of the source's arrangement: rms {float(audio.pow(2).mean().sqrt()):.3f} vs source {float(bank['audio'].pow(2).mean().sqrt()):.3f}")
-    write(OUT / f"B_ref_{song}_{which}.wav", audio)
+    write(OUT / f"B_ref_{song}_{which}{TAG}.wav", audio)
     write(OUT / f"B_src_{song}_{which}.wav", bank["audio"])
-    torch.save({k: v for k, v in bank.items() if k != "distance"}, ATOMS_DIR / f"{song}_{which}_bank.pt")
+    torch.save({k: v for k, v in bank.items() if k != "distance"}, ATOMS_DIR / f"{song}_{which}_bank{TAG}.pt")
     print("done")

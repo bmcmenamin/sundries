@@ -4,6 +4,7 @@
 
 Each generated stem is scaled to unit rms, then to its stem's share of the source mix: rms(stem) / rms(vocal-free mix), measured on the source's 10 s.
 """
+import os
 import sys
 from pathlib import Path
 
@@ -20,8 +21,9 @@ rms = lambda x: float(x.pow(2).mean().sqrt()) + 1e-12  # noqa: E731
 source = {s.name: decode_mono(s.path, sn.RATE)[: 10 * sn.RATE] for s in stems_of(song)}
 mix = sum(v for k, v in source.items() if k != "vocals")
 share = {name: rms(source[name]) / rms(mix) for name in names}
-generated = {name: torch.load(sn.ATOMS_DIR / f"N_{short}_{name}_30_triggers.pt")["audio"] for name in names}
+suffix = os.environ.get("SUFFIX", "")  # run_banks.sh's SUFFIX: picks a later generation of the same stems
+generated = {name: torch.load(sn.ATOMS_DIR / f"N_{short}_{name}_30{suffix}_triggers.pt")["audio"] for name in names}
 print("stem share of the source mix (dB):", {k: round(20 * float(torch.log10(torch.tensor(v))), 1) for k, v in share.items()})
 out = sum(generated[name] / rms(generated[name]) * share[name] for name in names)
-sn.write(sn.OUT / f"X_{short}_mix30.wav", out)
+sn.write(sn.OUT / f"X_{short}_mix30{suffix}.wav", out)
 sn.write(sn.OUT / f"X_{short}_src_mix.wav", sum(source[name] for name in names))

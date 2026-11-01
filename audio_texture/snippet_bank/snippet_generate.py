@@ -23,16 +23,17 @@ import torch  # noqa: E402
 import torch.nn.functional as F  # noqa: E402
 from transformers import AutoModel  # noqa: E402
 
+import rhythm_stats as rs  # noqa: E402
 import snippets as sn  # noqa: E402
 
 song, which, iters, tag = sys.argv[1], sys.argv[2], int(sys.argv[3]), sys.argv[4]
-NO_MERT, NO_TRIG = bool(os.environ.get("NO_MERT")), bool(os.environ.get("NO_TRIG"))
+NO_MERT, NO_TRIG, NO_RHYTHM = bool(os.environ.get("NO_MERT")), bool(os.environ.get("NO_TRIG")), bool(os.environ.get("NO_RHYTHM"))
 SEED, TRIG_WEIGHT = int(os.environ.get("SEED", 0)), float(os.environ.get("TRIG_WEIGHT", 1.0))
 LAYERS, PROJECTIONS, LAGS, RAMP = list(range(13)), 256, (1, 4, 16), 0.15
 torch.manual_seed(SEED)
 rng = np.random.default_rng(SEED)
 
-bank = torch.load(sn.ATOMS_DIR / f"{song}_{which}_bank.pt", weights_only=False)
+bank = torch.load(sn.ATOMS_DIR / f"{song}_{which}_bank{sn.TAG}.pt", weights_only=False)
 events, labels, offsets, gains = bank["events"], bank["labels"], bank["offsets"], bank["gains"]
 atoms, medoid_shift, T = bank["atoms"], bank["medoid_shift"], bank["frames"]
 C, D, S_ABS = len(atoms), 2 * sn.W + 1, int(medoid_shift.max()) + 2 * sn.W + 1
@@ -41,6 +42,7 @@ samples = int(OUT_SECONDS * sn.RATE)  # the output may be longer than the source
 T_OUT = samples // sn.HOP + 1
 kernels = sn.kernels_of(atoms)
 H_src = sn.grid_of(bank)
+group = rs.groups_of(atoms)  # spectral groups of the clusters, for the pair-lag joint
 
 # ----------------------------------------------------------------------------------------------------------------- trigger statistics
 to_abs = torch.zeros(C * D, S_ABS)
@@ -74,10 +76,11 @@ def trigger_statistics(H: torch.Tensor) -> dict[str, torch.Tensor]:
         torch.stack([torch.diagonal(P[:, : -int(l)] @ P[:, int(l) :].T, offset=delta).sum() for delta in range(-12, 13)])
         for l in range(1, 25)
     ]) / (total**2 / T)  # (lag, interval)
-    return {
+    stats = {
         "usage": A.sum(1) / total, "offsets": H.sum((0, 2)) / total, "pitch": P.sum(1) / total,
         "delay": smooth_last(delay[None], G2)[0], "interval": smooth_last(smooth_last(joint, G1).T, G2).T,
     }
+    return stats if NO_RHYTHM else {**stats, **rs.rhythm_statistics(A, group)}
 
 
 with torch.no_grad():
