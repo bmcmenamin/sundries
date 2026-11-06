@@ -53,11 +53,16 @@ def source_audio(song: str, which: str, seconds: float = float(os.environ.get("S
     return wave / wave.std()
 
 
+MIN_CLIP = 4 * RATE  # samples: every clip that generated fine was at least 4.0 s, every one that failed was 3.5 s or less
+
+
 def clips_of(song: str, n: int) -> list[tuple[int, int]]:
     """The sample ranges of a pooled pseudo-song's separate clips (segment.py pool writes them), cut to the n samples read; empty for an ordinary song."""
     path = ATOMS_DIR / f"{song}_clips.json"
     spans = json.loads(path.read_text()) if path.exists() else []
-    return [(a, min(b, n)) for a, b in spans if a < n]
+    cut = [(a, min(b, n)) for a, b in spans if a < n]
+    whole = [(a, b) for a, b in cut if b - a >= MIN_CLIP]  # the n-sample cut can leave a stub of the last clip (0.5-3.5 s): generation's per-clip statistics fail on those
+    return whole or cut
 
 
 def events_of(x0: torch.Tensor) -> np.ndarray:
@@ -126,6 +131,7 @@ def overlap(H: torch.Tensor) -> torch.Tensor:
 
 def write(path: Path, wave: torch.Tensor) -> None:
     x = wave.detach().numpy()
+    path.parent.mkdir(parents=True, exist_ok=True)
     wavfile.write(path, RATE, (x * (0.9 / max(np.abs(x).max(), 1e-9)) * 32767).astype(np.int16))
 
 

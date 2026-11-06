@@ -114,11 +114,38 @@ def clusters(h: torch.Tensor) -> int:
     return sum(ndimage.label((h[k] > 0).numpy(), structure=np.ones((3, 3)))[1] for k in range(h.shape[0]))
 
 
+def data_templates() -> torch.Tensor:
+    """K raw templates cut from the source's own (compressed) spectrogram at its K strongest frames, at least TEMPLATE_FRAMES apart, each at a random vertical shift."""
+    energy = GOAL.sum(0)
+    starts: list[int] = []
+    for t in energy[: n_t - TEMPLATE_FRAMES].argsort(descending=True).tolist():
+        if all(abs(t - s) >= TEMPLATE_FRAMES for s in starts):
+            starts.append(t)
+        if len(starts) == K:
+            break
+    starts += torch.randint(0, max(n_t - TEMPLATE_FRAMES, 1), (K - len(starts),)).tolist()  # a short source with fewer than K separated frames
+    shifts = torch.randint(0, max(GOAL.shape[0] - TEMPLATE_BINS, 0) // STRIDE + 1, (K,)).tolist()
+    patches = [F.pad(GOAL[s * STRIDE : s * STRIDE + TEMPLATE_BINS, t : t + TEMPLATE_FRAMES], (0, 0, 0, TEMPLATE_BINS - GOAL[s * STRIDE : s * STRIDE + TEMPLATE_BINS].shape[0])) for s, t in zip(shifts, starts)]
+    return torch.log(torch.expm1(torch.stack(patches).clamp_min(1e-2)))  # the inverse of the softplus in template()
+
+
 torch.manual_seed(0)
-raw_a = torch.rand(K, TEMPLATE_BINS, TEMPLATE_FRAMES).requires_grad_()
 x = torch.zeros(len(DURATIONS), K, n_shift, n_t)
 zero = torch.zeros_like(x).requires_grad_()
-(g0,) = torch.autograd.grad(smooth(zero, template(raw_a).detach()), zero)
+
+
+def start_gradient(raw: torch.Tensor) -> torch.Tensor:
+    (g,) = torch.autograd.grad(smooth(zero, template(raw)), zero)
+    return g
+
+
+raw_a = torch.rand(K, TEMPLATE_BINS, TEMPLATE_FRAMES)
+g0 = start_gradient(raw_a)
+if float((-g0[0]).max()) <= 0:  # no trigger of the dense random templates helps (a sparse, pad-like stem): the fit would stay at zero for ever, so start from the data instead
+    raw_a = data_templates()
+    g0 = start_gradient(raw_a)
+    print(f"random templates leave every start gradient positive: templates cut from the source instead (lambda_max now {float((-g0[0]).max()):.1f})", flush=True)
+raw_a = raw_a.requires_grad_()
 lam_max = float((-g0[0]).max())  # set by the plain-attack channel, so FRACTION means the same as in the attack-only runs
 print(f"{song} {which} {mode}: V {tuple(V.shape)}, K={K}, {seconds:.1f} s; lambda_max {lam_max:.1f}; start gradient per duration {[round(float((-g0[i]).max()), 0) for i in range(len(DURATIONS))]}", flush=True)
 

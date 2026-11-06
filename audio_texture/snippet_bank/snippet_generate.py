@@ -203,7 +203,7 @@ def mert_loss(audio: torch.Tensor, progress: float) -> tuple[torch.Tensor, dict[
 n_seed = int(round(1.2 * len(events) * T_OUT / T))
 usage = np.bincount(labels, minlength=C) / len(labels)
 seed_c = rng.choice(C, n_seed, p=usage)
-seed_d = np.array([int(rng.choice(offsets[labels == c])) for c in seed_c]) + sn.W
+seed_d = np.clip(np.array([int(rng.choice(offsets[labels == c])) for c in seed_c]), -sn.W, sn.W) + sn.W  # beyond +-W clipped, as snippets.grid_of does
 seed_t = rng.integers(0, T_OUT - sn.TF, n_seed)
 seed_g = rng.choice(gains, n_seed)
 support = torch.zeros(C, D, T_OUT, dtype=torch.bool)
@@ -232,9 +232,17 @@ def clamp_of(path: str | None, gain: float) -> torch.Tensor:
 clamp = clamp_of(os.environ.get("CLAMP"), float(os.environ.get("CLAMP_GAIN", 1.0)))
 
 
+def fitted(rendered: torch.Tensor, length: int) -> torch.Tensor:
+    return F.pad(rendered, (0, length - rendered.numel()))  # a little short when the tail asked for runs past the last snippet's end
+
+
 def played(H: torch.Tensor, length: int) -> torch.Tensor:
-    rendered = sn.render(H, kernels, length)  # a little short when the tail asked for runs past the last snippet's end
-    return F.pad(rendered, (0, length - rendered.numel())) + clamp[:length]
+    """The render at unit rms over the section's `samples` (MERT is blind to level, so nothing else holds it: unpinned it drifts by orders of magnitude, and stitch.py
+    multiplies by the stem's level), plus the clamp, which is already in these units. A longer `length` (the ringing-out tail) keeps the same scale."""
+    base = fitted(sn.render(H, kernels, samples), samples)
+    scale = 1.0 / base.pow(2).mean().sqrt().clamp_min(1e-8)
+    full = base if length == samples else fitted(sn.render(H, kernels, length), length)
+    return full * scale + clamp[:length]
 
 
 def objective(progress: float) -> tuple[torch.Tensor, list[str], torch.Tensor, torch.Tensor]:
